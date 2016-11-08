@@ -65,6 +65,9 @@ def get_source_dict():
     source_dict['None'] = {'fn_pattern':'None', 'label':'Other', 'marker':'+', 'error':0.0, 'type':'None'}
     return source_dict
 
+if len(sys.argv) != 2:
+    sys.exit("Usage: %s stack.npz" % os.path.basename(sys.argv[0]))
+
 stack_fn = sys.argv[1]
 
 print "Loading stack"
