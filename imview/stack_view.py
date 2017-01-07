@@ -28,144 +28,6 @@ from pygeotools.lib import malib
 from pygeotools.lib import geolib
 from pygeotools.lib import filtlib 
 
-#This is kind of a mess
-#Generate dictionary of different data sources
-def get_source_dict():
-    #Use OrderedDict here to remember order - this is important for cascade to identify source from fn
-    from collections import OrderedDict
-    source_dict = OrderedDict() 
-    source_dict['ATM'] = {'fn_pattern':'_atm_', 'label':'ATM', 'marker':'^', 'error':0.1, 'type':'DEM'}
-    source_dict['LVIS'] = {'fn_pattern':'_lvis_', 'label':'LVIS', 'marker':'v', 'error':0.1, 'type':'DEM'}
-    source_dict['GLAS'] = {'fn_pattern':'_glas_', 'label':'GLAS', 'marker':'>', 'error':0.2, 'type':'DEM'}
-    #source_dict['TDM'] = {'fn_pattern':'TDM', 'label':'TDM', 'marker':'H', 'error':1.0, 'type':'DEM'}
-    source_dict['TDM'] = {'fn_pattern':'_DEM-trans_reference-DEM', 'label':'TDM', 'marker':'H', 'error':1.0, 'type':'DEM'}
-    source_dict['SPIRIT'] = {'fn_pattern':'SP', 'label':'SPIRIT', 'marker':'p', 'error':3.0, 'type':'DEM'}
-    source_dict['GLISTIN'] = {'fn_pattern':'GLISTIN', 'label':'GLISTIN', 'marker':'<', 'error':2.0, 'type':'DEM'}
-    source_dict['DG_mono'] = {'fn_pattern':'-DEM_mono_32m_trans', 'label':'DG mono', 'marker':'D', 'error':1.0, 'type':'DEM'}
-    source_dict['DG_stereo'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo', 'marker':'s', 'error':0.5, 'type':'DEM'}
-    source_dict['DG_stereo_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo tiltcorr', 'marker':'s', 'error':0.5, 'type':'DEM'}
-    source_dict['DG_stereo_nocorr_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo nocorr tiltcorr', 'marker':'s', 'alpha':0.5, 'error':0.5, 'type':'DEM'}
-    source_dict['DG_mono_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG mono tiltcorr', 'marker':'D', 'error':0.5, 'type':'DEM'}
-    source_dict['DG_mono_nocorr_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG mono nocorr tiltcorr', 'marker':'D', 'error':0.5, 'alpha':0.5, 'type':'DEM'}
-
-    #Missing stereo align tiltcorr
-    source_dict['DG_stereo_nocorr_reftrend_medcorr'] = {'fn_pattern':'-DEM_32m_reftrend_medcorr', 'label':'DG stereo lint', 'marker':'+', 'error':1.5, 'type':'DEM'}
-    source_dict['DG_stereo_nocorr_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_32m_reftrend_tiltcorr', 'label':'DG stereo lint+tilt', 'marker':'+', 'error':2.0, 'type':'DEM'}
-    source_dict['DG_stereo_nocorr'] = {'fn_pattern':'-DEM_32m', 'label':'DG stereo nocorr', 'marker':'o', 'error':4.0, 'type':'DEM'}
-    source_dict['DG_mono_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_mono_32m_trans_reftrend_tiltcorr', 'label':'DG mono tilt', 'marker':'+', 'error':2.0, 'type':'DEM'}
-    source_dict['DG_mono_nocorr_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_mono_32m_reftrend_tiltcorr', 'label':'DG mono lint+tilt', 'marker':'+', 'error':2.5, 'type':'DEM'}
-    source_dict['DG_mono_nocorr'] = {'fn_pattern':'-DEM_mono_32m', 'label':'DG mono nocorr', 'marker':'d', 'error':5.0, 'type':'DEM'}
-
-    #Velocity data (easier to add these to same source_dict
-    source_dict['TSX'] = {'fn_pattern':'_tsx', 'label':'TSX', 'marker':'o', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
-    source_dict['ALOS'] = {'fn_pattern':'_alos', 'label':'ALOS', 'marker':'s', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
-    source_dict['RS1'] = {'fn_pattern':'_rsat1', 'label':'RS1', 'marker':'H', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
-    source_dict['RS2'] = {'fn_pattern':'_rsat2', 'label':'RS2', 'marker':'p', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
-    source_dict['LS8'] = {'fn_pattern':'_ls8', 'label':'LS8', 'marker':'p', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
-    source_dict['None'] = {'fn_pattern':'None', 'label':'Other', 'marker':'+', 'error':0.0, 'type':'None'}
-    return source_dict
-
-if len(sys.argv) != 2:
-    sys.exit("Usage: %s stack.npz" % os.path.basename(sys.argv[0]))
-
-stack_fn = sys.argv[1]
-
-print "Loading stack"
-s = malib.DEMStack(stack_fn=stack_fn, stats=True, trend=True, save=False)
-d = s.date_list_o
-
-min_dt = d[0]
-max_dt = d[-1]
-#Use these to set bounds to hardcode min/max of all stacks
-#import pytz
-#min_dt = datetime(1999,1,1)
-#min_dt = datetime(2007,1,1, tzinfo=pytz.utc)
-#max_dt = datetime(2015,12,31, tzinfo=pytz.utc)
-
-source = np.ma.array(s.source)
-source_dict = get_source_dict()
-error = s.error
-gt = s.gt
-m = s.ma_stack
-val = s.stack_mean
-count = s.stack_count
-std = s.stack_std
-trend = s.stack_trend
-detrended_std = s.stack_detrended_std
-stack_type = 'dem'
-filter_outliers = False 
-
-if 'TSX' in source or 'ALOS' in source or 'RS1' in source or 'RS2' in source:
-    stack_type = 'velocity' 
-
-if 'zs' in stack_fn:
-    stack_type = 'racmo'
-
-if 'meltrate' in stack_fn:
-    stack_type = 'meltrate'
-
-if stack_type == 'velocity':
-    #pad = 3
-    #Use this for Jak stack with RADARSAT data
-    pad = 0
-    ylabel = 'Velocity (m/yr)'
-    ylabel_rel = 'Relative Velocity (m/yr)'
-    ylabel_resid = 'Detrended Velocity (m/yr)'
-    plot4_label = 'Detrended std (m/yr)'
-    hs = None
-    alpha = 1.0
-    geoid_offset = False
-    plot_trend = False
-    plot_resid = False
-    errorbars = False
-    if 'RS' in source:
-        filter_outliers = True
-elif stack_type == 'racmo':
-    pad = 0
-    ylabel = 'RACMOFDM zs (m)'
-    ylabel_rel = 'Relative RACMOFDM zs (m)'
-    ylabel_resid = 'Detrended RACMOFDM zs (m)'
-    plot4_label = 'Detrended std (m)'
-    hs = None
-    alpha = 1.0
-    geoid_offset = False
-    plot_trend = True 
-    plot_resid = True 
-    errorbars = False
-elif stack_type == 'meltrate':
-    pad = 3
-    ylabel = 'Melt Rate (m/yr)'
-    ylabel_rel = 'Relative Melt Rate (m/yr)'
-    ylabel_resid = 'Detrended Melt Rate (m/yr)'
-    plot4_label = 'Detrended std (m/yr)'
-    hs = None
-    alpha = 1.0
-    geoid_offset = False
-    plot_trend = True 
-    plot_resid = False 
-    errorbars = False
-else:
-    #pad = 5
-    #pad = 1
-    pad = 3
-    ylabel = 'Elevation (m EGM2008)'
-    ylabel_rel = 'Relative Elevation (m)'
-    ylabel_resid = 'Detrended Elevation (m)'
-    #plot4_label = 'Detrended std (m)'
-    plot4_label = 'Elevation std (m)'
-    s.mean_hillshade()
-    hs = s.stack_mean_hs
-    hs_clim = malib.calcperc(hs, (2,98))
-    alpha = 0.6
-    geoid_offset = False 
-    plot_trend = True
-    plot_resid = True 
-    errorbars = True
-
-color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-colors = itertools.cycle(color_list)
-ms = 5
-
 #This overloads the default matplotlib click handler
 def onclick(event):
     b = event.button
@@ -507,6 +369,144 @@ def clear_figure():
     #Reset the color cycle
     global colors
     colors = itertools.cycle(color_list)
+
+#This is kind of a mess
+#Generate dictionary of different data sources
+def get_source_dict():
+    #Use OrderedDict here to remember order - this is important for cascade to identify source from fn
+    from collections import OrderedDict
+    source_dict = OrderedDict() 
+    source_dict['ATM'] = {'fn_pattern':'_atm_', 'label':'ATM', 'marker':'^', 'error':0.1, 'type':'DEM'}
+    source_dict['LVIS'] = {'fn_pattern':'_lvis_', 'label':'LVIS', 'marker':'v', 'error':0.1, 'type':'DEM'}
+    source_dict['GLAS'] = {'fn_pattern':'_glas_', 'label':'GLAS', 'marker':'>', 'error':0.2, 'type':'DEM'}
+    #source_dict['TDM'] = {'fn_pattern':'TDM', 'label':'TDM', 'marker':'H', 'error':1.0, 'type':'DEM'}
+    source_dict['TDM'] = {'fn_pattern':'_DEM-trans_reference-DEM', 'label':'TDM', 'marker':'H', 'error':1.0, 'type':'DEM'}
+    source_dict['SPIRIT'] = {'fn_pattern':'SP', 'label':'SPIRIT', 'marker':'p', 'error':3.0, 'type':'DEM'}
+    source_dict['GLISTIN'] = {'fn_pattern':'GLISTIN', 'label':'GLISTIN', 'marker':'<', 'error':2.0, 'type':'DEM'}
+    source_dict['DG_mono'] = {'fn_pattern':'-DEM_mono_32m_trans', 'label':'DG mono', 'marker':'D', 'error':1.0, 'type':'DEM'}
+    source_dict['DG_stereo'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo', 'marker':'s', 'error':0.5, 'type':'DEM'}
+    source_dict['DG_stereo_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo tiltcorr', 'marker':'s', 'error':0.5, 'type':'DEM'}
+    source_dict['DG_stereo_nocorr_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo nocorr tiltcorr', 'marker':'s', 'alpha':0.5, 'error':0.5, 'type':'DEM'}
+    source_dict['DG_mono_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG mono tiltcorr', 'marker':'D', 'error':0.5, 'type':'DEM'}
+    source_dict['DG_mono_nocorr_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG mono nocorr tiltcorr', 'marker':'D', 'error':0.5, 'alpha':0.5, 'type':'DEM'}
+
+    #Missing stereo align tiltcorr
+    source_dict['DG_stereo_nocorr_reftrend_medcorr'] = {'fn_pattern':'-DEM_32m_reftrend_medcorr', 'label':'DG stereo lint', 'marker':'+', 'error':1.5, 'type':'DEM'}
+    source_dict['DG_stereo_nocorr_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_32m_reftrend_tiltcorr', 'label':'DG stereo lint+tilt', 'marker':'+', 'error':2.0, 'type':'DEM'}
+    source_dict['DG_stereo_nocorr'] = {'fn_pattern':'-DEM_32m', 'label':'DG stereo nocorr', 'marker':'o', 'error':4.0, 'type':'DEM'}
+    source_dict['DG_mono_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_mono_32m_trans_reftrend_tiltcorr', 'label':'DG mono tilt', 'marker':'+', 'error':2.0, 'type':'DEM'}
+    source_dict['DG_mono_nocorr_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_mono_32m_reftrend_tiltcorr', 'label':'DG mono lint+tilt', 'marker':'+', 'error':2.5, 'type':'DEM'}
+    source_dict['DG_mono_nocorr'] = {'fn_pattern':'-DEM_mono_32m', 'label':'DG mono nocorr', 'marker':'d', 'error':5.0, 'type':'DEM'}
+
+    #Velocity data (easier to add these to same source_dict
+    source_dict['TSX'] = {'fn_pattern':'_tsx', 'label':'TSX', 'marker':'o', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
+    source_dict['ALOS'] = {'fn_pattern':'_alos', 'label':'ALOS', 'marker':'s', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
+    source_dict['RS1'] = {'fn_pattern':'_rsat1', 'label':'RS1', 'marker':'H', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
+    source_dict['RS2'] = {'fn_pattern':'_rsat2', 'label':'RS2', 'marker':'p', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
+    source_dict['LS8'] = {'fn_pattern':'_ls8', 'label':'LS8', 'marker':'p', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
+    source_dict['None'] = {'fn_pattern':'None', 'label':'Other', 'marker':'+', 'error':0.0, 'type':'None'}
+    return source_dict
+
+if len(sys.argv) != 2:
+    sys.exit("Usage: %s stack.npz" % os.path.basename(sys.argv[0]))
+
+stack_fn = sys.argv[1]
+
+print "Loading stack"
+s = malib.DEMStack(stack_fn=stack_fn, stats=True, trend=True, save=False)
+d = s.date_list_o
+
+min_dt = d[0]
+max_dt = d[-1]
+#Use these to set bounds to hardcode min/max of all stacks
+#import pytz
+#min_dt = datetime(1999,1,1)
+#min_dt = datetime(2007,1,1, tzinfo=pytz.utc)
+#max_dt = datetime(2015,12,31, tzinfo=pytz.utc)
+
+source = np.ma.array(s.source)
+source_dict = get_source_dict()
+error = s.error
+gt = s.gt
+m = s.ma_stack
+val = s.stack_mean
+count = s.stack_count
+std = s.stack_std
+trend = s.stack_trend
+detrended_std = s.stack_detrended_std
+stack_type = 'dem'
+filter_outliers = False 
+
+if 'TSX' in source or 'ALOS' in source or 'RS1' in source or 'RS2' in source:
+    stack_type = 'velocity' 
+
+if 'zs' in stack_fn:
+    stack_type = 'racmo'
+
+if 'meltrate' in stack_fn:
+    stack_type = 'meltrate'
+
+if stack_type == 'velocity':
+    #pad = 3
+    #Use this for Jak stack with RADARSAT data
+    pad = 0
+    ylabel = 'Velocity (m/yr)'
+    ylabel_rel = 'Relative Velocity (m/yr)'
+    ylabel_resid = 'Detrended Velocity (m/yr)'
+    plot4_label = 'Detrended std (m/yr)'
+    hs = None
+    alpha = 1.0
+    geoid_offset = False
+    plot_trend = False
+    plot_resid = False
+    errorbars = False
+    if 'RS' in source:
+        filter_outliers = True
+elif stack_type == 'racmo':
+    pad = 0
+    ylabel = 'RACMOFDM zs (m)'
+    ylabel_rel = 'Relative RACMOFDM zs (m)'
+    ylabel_resid = 'Detrended RACMOFDM zs (m)'
+    plot4_label = 'Detrended std (m)'
+    hs = None
+    alpha = 1.0
+    geoid_offset = False
+    plot_trend = True 
+    plot_resid = True 
+    errorbars = False
+elif stack_type == 'meltrate':
+    pad = 3
+    ylabel = 'Melt Rate (m/yr)'
+    ylabel_rel = 'Relative Melt Rate (m/yr)'
+    ylabel_resid = 'Detrended Melt Rate (m/yr)'
+    plot4_label = 'Detrended std (m/yr)'
+    hs = None
+    alpha = 1.0
+    geoid_offset = False
+    plot_trend = True 
+    plot_resid = False 
+    errorbars = False
+else:
+    #pad = 5
+    #pad = 1
+    pad = 3
+    ylabel = 'Elevation (m EGM2008)'
+    ylabel_rel = 'Relative Elevation (m)'
+    ylabel_resid = 'Detrended Elevation (m)'
+    #plot4_label = 'Detrended std (m)'
+    plot4_label = 'Elevation std (m)'
+    s.mean_hillshade()
+    hs = s.stack_mean_hs
+    hs_clim = malib.calcperc(hs, (2,98))
+    alpha = 0.6
+    geoid_offset = False 
+    plot_trend = True
+    plot_resid = True 
+    errorbars = True
+
+color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+colors = itertools.cycle(color_list)
+ms = 5
 
 #fig = plt.figure(0, figsize=(14,12), facecolor='white')
 fig = plt.figure(0, figsize=(14,12))
