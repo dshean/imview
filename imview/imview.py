@@ -273,12 +273,13 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
 
     cmap_name = cmap
     cmap = plt.get_cmap(cmap_name)
-    #This sets the nodata background to opaque black
     if 'inferno' in cmap_name:
-        #cmap.set_bad('w', alpha=1)
+        #Use a gray background
         cmap.set_bad('0.5', alpha=1)
     else:
+        #This sets the nodata background to opaque black
         cmap.set_bad('k', alpha=1)
+        #cmap.set_bad('w', alpha=1)
 
     #ax.set_title("Band %i" % subplt, fontsize=10)
     if title is not None:
@@ -289,14 +290,17 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         #Note, 1 is opaque, 0 completely transparent
         #alpha = 0.6
         #bg_perc = (4,96)
-        #bg_perc = (0.05, 99.95)
+        bg_perc = (0.05, 99.95)
         #bg_perc = (1, 99)
         bg_alpha = 1.0
         #bg_alpha = 0.5 
         bg_clim = malib.calcperc(bg, bg_perc)
         bg_cmap_name = 'gray'
         bg_cmap = plt.get_cmap(bg_cmap_name)
-        bg_cmap.set_bad('k', alpha=1)
+        if 'inferno' in cmap_name:
+            bg_cmap.set_bad('0.5', alpha=1)
+        else:
+            bg_cmap.set_bad('k', alpha=1)
         #Set the overlay bad values to completely transparent, otherwise darkens the bg
         cmap.set_bad(alpha=0)
         bgplot = ax.imshow(bg, cmap=bg_cmap, clim=bg_clim, alpha=bg_alpha)
