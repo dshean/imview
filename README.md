@@ -24,13 +24,14 @@ gdaladdo -ro -r average --config COMPRESS_OVERVIEW LZW --config BIGTIFF_OVERVIEW
 gdaladdo -ro -r average --config COMPRESS_OVERVIEW LZW --config BIGTIFF_OVERVIEW YES ${mos_fn}_hs_az315.tif 2 4 8 16 32 64
 ```
 
-#### View color DEM over grayscale shaded relief map:
+#### View color DEM overlaid on shaded relief map:
 
 `imview.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -label 'Elevation (m WGS84)'`
 
 * By default, this will quickly load a low-resolution preview (specify -full to load full-res image)
 * Lower right corner shows coordinates and value under cursor
 * Left-click to sample image coordinates, map coordinates and raster value
+* Can specify transparency with `-alpha 0.5`
 
 #### View with user-defined color map and limits
 
