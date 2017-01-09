@@ -28,7 +28,7 @@ from pygeotools.lib import geolib
 from pygeotools.lib import timelib
 from pygeotools.lib import warplib
 
-from lib import pltlib
+from imview.lib import pltlib
 
 #These are matplotlib 2.0 colormaps
 #To use:
@@ -404,8 +404,7 @@ def get_bma(src_ds, bn, full):
     else:
         return iolib.gdal_getma_sub(src_ds, bn)
 
-def main():
-
+def getparser():
     #Generate list of valid mpl colormaps
     maps=[m for m in plt.cm.datad]
     #maps=[m for m in plt.cm.datad if not m.endswith("_r")]
@@ -442,7 +441,10 @@ def main():
     parser.add_argument('-ticks', action='store_true', help='display ticks')
     parser.add_argument('-scalebar',type=str,default=None,choices=['xy','x','y'],help='Show scalebar in x and y, x, or y')
     parser.add_argument('filelist', nargs='+', help='input filenames (img1.tif img2.tif...)')
+    return parser
 
+def main():
+    parser = getparser()
     #Create dictionary of arguments
     args = vars(parser.parse_args())
     
