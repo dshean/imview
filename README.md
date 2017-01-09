@@ -3,10 +3,10 @@ Image viewers for geospatial data
 
 ## Overview
 
-This repo contains several utilities that I use on a daily basis for rapid data preview, detailed analysis, and figure generation.  The imview.py tool is probably the most useful.  It works, but needs a rewrite, as it has been glommed together over the span of 4-5 years.
+This repo contains several utilities that I use on a daily basis for rapid data preview, detailed analysis, and figure generation.  The imviewer.py tool is probably the most useful.  It works well, but could use a rewrite, as it has been glommed together over the span of 4-5 years.
 
 ## Viewers
-- imview - viewer for geospatial data, overlay capabilities
+- imviewer - viewer for geospatial data, overlay capabilities
 - stack_view - viewer for "stack.npz" time series output (see [pygeotools](https://github.com/dshean/pygeotools.git)), allowing for point sampling and plotting
 - iv - lightweight viewer for standard images (jpg, png, etc.)
 - review_img -   lightweight viewer to identify good and bad images
@@ -26,7 +26,7 @@ gdaladdo -ro -r average --config COMPRESS_OVERVIEW LZW --config BIGTIFF_OVERVIEW
 
 #### View color DEM overlaid on shaded relief map:
 
-`imview.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -label 'Elevation (m WGS84)'`
+`imviewer.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -label 'Elevation (m WGS84)'`
 
 * By default, this will quickly load a low-resolution preview (specify -full to load full-res image)
 * Lower right corner shows coordinates and value under cursor
@@ -35,19 +35,19 @@ gdaladdo -ro -r average --config COMPRESS_OVERVIEW LZW --config BIGTIFF_OVERVIEW
 
 #### View with user-defined color map and limits
 
-`imview.py -cmap 'RdYlBl' -clim -5 5 dem_dz_eul.tif -label 'Elevation difference (m)'`
+`imviewer.py -cmap 'RdYlBl' -clim -5 5 dem_dz_eul.tif -label 'Elevation difference (m)'`
 
 #### Link several images (allows for simultaneous zoom and pan):
 
-`imview -link dem.tif image.tif velocity.tif`
+`imviewer.py -link dem.tif image.tif velocity.tif`
 
 #### View polyline shapefile overlay:
 
-`imview.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -shp polyline.shp` 
+`imviewer.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -shp polyline.shp` 
 
 #### Output high-quality figure with scalebar:
 
-`imview.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -scale x -label 'Elevation (m WGS84)' -of png -dpi 300` 
+`imviewer.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -scale x -label 'Elevation (m WGS84)' -of png -dpi 300` 
 
 #### View time series stack:
 ```
