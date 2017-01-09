@@ -71,7 +71,7 @@ Install the latest release from PyPI:
 Clone the repository and install:
 
     git clone https://github.com/dshean/imview.git
-    pip install -e imview/
+    pip install -e imview
 
 The -e flag ("editable mode", setuptools "develop mode") will allow you to modify source code and immediately see changes.
 
