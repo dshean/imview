@@ -3,7 +3,7 @@ Image viewers for geospatial data
 
 ## Overview
 
-This repo contains several utilities that I use on a daily basis for rapid data preview, review, and figure generation.  The imview.py tool is probably the most useful.  It works, but needs a rewrite, as it has been glommed together over the span of 4-5 years.
+This repo contains several utilities that I use on a daily basis for rapid data preview, detailed analysis, and figure generation.  The imview.py tool is probably the most useful.  It works, but needs a rewrite, as it has been glommed together over the span of 4-5 years.
 
 ## Viewers
 - imview - viewer for geospatial data, overlay capabilities
