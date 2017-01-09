@@ -16,7 +16,7 @@ This repo contains several utilities that I use on a daily basis for rapid data 
 
 ## Command-line Examples
 
-Preprocessing (optional):
+#### Preprocessing (optional):
 ```
 mos_fn=BigDEM.tif
 gdaldem hillshade $mos_fn ${mos_fn}_hs_az315.tif
@@ -24,27 +24,38 @@ gdaladdo -ro -r average --config COMPRESS_OVERVIEW LZW --config BIGTIFF_OVERVIEW
 gdaladdo -ro -r average --config COMPRESS_OVERVIEW LZW --config BIGTIFF_OVERVIEW YES ${mos_fn}_hs_az315.tif 2 4 8 16 32 64
 ```
 
-View color DEM over grayscale shaded relief map (Note: by default, quickly load a low-resolution preview, unless -full specified)
-`imview.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -label 'Elevation (m WGS84)'`
-Left-click to sample image coordinates, map coordinates and raster value
+#### View color DEM over grayscale shaded relief map:
 
-View with user-defined color map and limits
+`imview.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -label 'Elevation (m WGS84)'`
+
+* By default, this will quickly load a low-resolution preview (specify -full to load full-res image)
+* Lower right corner shows coordinates and value under cursor
+* Left-click to sample image coordinates, map coordinates and raster value
+
+#### View with user-defined color map and limits
+
 `imview.py -cmap 'RdYlBl' -clim -5 5 dem_dz_eul.tif -label 'Elevation difference (m)'`
 
-Link several images (allows for simultaneous zoom and pan):
+#### Link several images (allows for simultaneous zoom and pan):
+
 `imview -link dem.tif image.tif velocity.tif`
 
-View polyline shapefile overlay:
+#### View polyline shapefile overlay:
+
 `imview.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -shp polyline.shp` 
 
-Output high-quality figure with scalebar:
+#### Output high-quality figure with scalebar:
+
 `imview.py $mos_fn -overlay ${mos_fn}_hs_az315.tif -scale x -label 'Elevation (m WGS84)' -of png -dpi 300` 
 
-View time series stack:
-`make_stack.py -tr 'min' -te 'union' 20080101_dem.tif 20090101_dem.tif 20100101_dem.tif`
-`stack_view.py 20080101_dem_20100101_dem_stack_3.npz`
-Left-click to extract time series at point on any of the context maps
-Right-click to clear all points
+#### View time series stack:
+```
+make_stack.py -tr 'mean' -te 'intersection' 20080101_dem.tif 20090101_dem.tif 20100101_dem.tif
+stack_view.py 20080101_dem_20100101_dem_stack_3.npz
+```
+* Left-click to extract time series at point on any of the context maps
+* Right-click to clear all points
+* Can zoom and pan on context maps
 
 ## Installation
 
