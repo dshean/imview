@@ -34,14 +34,14 @@ from imview.lib import pltlib
 #To use:
 #cmap=cmaps.inferno
 #cmap=cmaps.viridis
-import colormaps as cmaps
+import imview.lib.colormaps as cmaps
 plt.register_cmap(name='inferno', cmap=cmaps.inferno)
 plt.register_cmap(name='inferno_r', cmap=cmaps.inferno_r)
 plt.register_cmap(name='magma', cmap=cmaps.magma)
 plt.register_cmap(name='plasma', cmap=cmaps.plasma)
 plt.register_cmap(name='viridis', cmap=cmaps.viridis)
 
-import gmtColormap
+from imview.lib import gmtColormap
 cpt_rainbow = gmtColormap.get_rainbow()
 plt.register_cmap(cmap=cpt_rainbow)
 cpt_rainbow_r = gmtColormap.get_rainbow(rev=True) 

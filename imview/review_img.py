@@ -16,7 +16,7 @@ import matplotlib.image as mpimg
 from pygeotools.lib import iolib
 from pygeotools.lib import malib
 
-import gmtColormap
+from . import gmtColormap
 cpt_rainbow = gmtColormap.get_rainbow()
 plt.register_cmap(cmap=cpt_rainbow)
 

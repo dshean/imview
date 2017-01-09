@@ -15,18 +15,18 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-import colormaps as cmaps
-import gmtColormap
-cpt_rainbow = gmtColormap.get_rainbow()
-cmap = cpt_rainbow
-#cmap = plt.get_cmap('gist_rainbow_r')
-
-from lib import pltlib
 from pygeotools.lib import timelib
 from pygeotools.lib import iolib
 from pygeotools.lib import malib
 from pygeotools.lib import geolib
 from pygeotools.lib import filtlib 
+
+from imview.lib import pltlib
+import imview.lib.colormaps as cmaps
+from imview.lib import gmtColormap
+cpt_rainbow = gmtColormap.get_rainbow()
+cmap = cpt_rainbow
+#cmap = plt.get_cmap('gist_rainbow_r')
 
 #This overloads the default matplotlib click handler
 def onclick(event):
