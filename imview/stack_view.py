@@ -28,6 +28,32 @@ cpt_rainbow = gmtColormap.get_rainbow()
 cmap = cpt_rainbow
 #cmap = plt.get_cmap('gist_rainbow_r')
 
+#Reorganized to use main, so now need global variables for interactive onclick, sampling and plotting functions 
+#There is definitely a cleaner way to organize this functionality
+global m
+global d
+global min_dt
+global max_dt
+global source_dict
+global geoid_offset
+global errorbars
+global pad
+global error
+global source
+global gt
+global ms
+global plot_trend
+global plot_resid
+global filter_outliers
+
+global ax_list
+global ax_pt_list
+global ax_rel
+global ax_abs
+global ax_resid
+
+global colors
+
 #This overloads the default matplotlib click handler
 def onclick(event):
     b = event.button
@@ -44,12 +70,17 @@ def onclick(event):
     elif b is 3:
         clear_figure()
 
+def reset_colors():
+    color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    global colors
+    colors = itertools.cycle(color_list)
+
 def save_figure():
     print "Not yet implemented"
 
 #This creates a static legend for all point types
 #Could put constant error bars on points in legend, not on plot 
-def create_legend(ax, loc='lower left'):
+def create_legend(ax, source, loc='lower left'):
     lines = []
     labels = []
     uniq_src = np.ma.unique(source)
@@ -82,14 +113,14 @@ def create_legend_interactive(ax):
     for h in legend.legendHandles:
         h.set_color('k')
 
-def fmt_ax(ax, ylabel=None, legend=True):
+def fmt_ax(ax, ylabel=None, legend_source=None):
     #ax.set_ylim(-1, 1)
     ax.set_xlim(min_dt, max_dt)
     pltlib.fmt_date_ax(ax)
     pltlib.pad_xaxis(ax)
     ax.set_ylabel(ylabel)
-    if legend:
-        create_legend(ax)
+    if legend_source is not None:
+        create_legend(ax, legend_source)
 
 def linregress(v):
     import scipy.stats
@@ -263,7 +294,7 @@ def doy_plot(dt_list, v, ylabel=None, title=None):
         mx,my = title.split(', ')
         fig_fn = '%s_doyplot_%s_%s_fig.png' % (os.path.splitext(s.stack_fn)[0], mx, my) 
     else:
-        fig_fn = '%s_doyplot_terminus_fig.png' % os.path.splitext(s.stack_fn)[0]
+        fig_fn = '%s_doyplot_fig.png' % os.path.splitext(s.stack_fn)[0]
     #doy_ax.set_ylim(100,260)
     plt.tight_layout()
     #plt.savefig(fig_fn, dpi=300)
@@ -273,7 +304,7 @@ def plot_point_map(mx, my):
     ex, ey = geolib.mapToPixel(mx, my, gt)
     plot_point(ex, ey)
 
-def plot_point(ex, ey, errorbars=True):
+def plot_point(ex, ey):
     if ex > m.shape[2]-1 or ey > m.shape[1]-1:
         print "Input coordinates are outside stack extent:"
         print ex, ey
@@ -302,8 +333,8 @@ def plot_point(ex, ey, errorbars=True):
                 #if np.all(np.abs(ax_rel.get_ylim()) < vn_abs_lim):
                 #    ax_rel.set_ylim(-v_rel_abs_lim, v_rel_abs_lim)
                 if plot_resid:
-                    r_samp_list = split_sample(r)
                     plt.figure(3)
+                    r_samp_list = split_sample(r)
                     for i in r_samp_list:
                         r_line, = ax_resid.plot_date(i[0], i[1], marker=i[4], alpha=i[5], markersize=ms, color=c, linestyle='None') 
                         if errorbars:
@@ -311,22 +342,25 @@ def plot_point(ex, ey, errorbars=True):
                                 ax_resid.errorbar(i[0], i[1], yerr=i[2], color=c, linestyle='None')
                     plt.draw()
             for i in samp_list:
-                plt.figure(1)
                 #Don't label, as we want legend to contain trend values
+                plt.figure(1)
                 v_rel_line, = ax_rel.plot_date(i[0], i[1]-v_mean, marker=i[4], alpha=i[5], markersize=ms, color=c, linestyle='None') 
                 if errorbars:
                     if np.any(i[2] != 0): 
+                        plt.figure(1)
                         ax_rel.errorbar(i[0], i[1]-v_mean, yerr=i[2], color=c, linestyle='None')
                 plt.figure(2)
                 v_line, = ax_abs.plot_date(i[0], i[1], marker=i[4], alpha=i[5], markersize=ms, color=c, linestyle='None')
                 if errorbars:
                     if np.any(i[2] != 0): 
+                        plt.figure(2)
                         ax_abs.errorbar(i[0], i[1], yerr=i[2], color=c, linestyle='None')
+            plt.figure(2)
             #Now draw lines connecting points
             v_line, = ax_abs.plot_date(d_valid, v_valid, marker=None, color=c, linestyle='-', linewidth=0.6, alpha=0.5) 
             plt.draw()
-            plt.figure(1)
             #Don't really need/want lines between points on this one - too busy
+            plt.figure(1)
             v_rel_line, = ax_rel.plot_date(d_valid, v_rel_valid, marker=None, color=c, linestyle='-', linewidth=0.6, alpha=0.5) 
             if plot_trend:
                 #Add legend containing trend values
@@ -341,10 +375,10 @@ def plot_point(ex, ey, errorbars=True):
             #Now add point to context maps
             plt.figure(0)
             #Could get fancy here and scale the marker as unfilled square scaled to size of padded sample
-            ax0_pt_list.extend(ax0.plot(ex, ey, 'o', color=c))
-            ax1_pt_list.extend(ax1.plot(ex, ey, 'o', color=c))
-            ax2_pt_list.extend(ax2.plot(ex, ey, 'o', color=c))
-            ax3_pt_list.extend(ax3.plot(ex, ey, 'o', color=c))
+            ax_pt_list[0].extend(ax_list[0].plot(ex, ey, 'o', color=c))
+            ax_pt_list[1].extend(ax_list[1].plot(ex, ey, 'o', color=c))
+            ax_pt_list[2].extend(ax_list[2].plot(ex, ey, 'o', color=c))
+            ax_pt_list[3].extend(ax_list[3].plot(ex, ey, 'o', color=c))
             plt.draw()
             if False:
                 out_fn = 'stack_sample_%0.1f_%0.1f.csv' % (mx, my)
@@ -357,18 +391,18 @@ def clear_figure():
         plt.figure(i)
         ax = plt.gca()
         ylabel = ax.get_ylabel()
+        print ylabel
         ax.cla()
         fmt_ax(ax, ylabel)
         plt.draw()
     plt.figure(0)
-    for ax_pt_list in (ax0_pt_list, ax1_pt_list, ax2_pt_list, ax3_pt_list):
-        for i in ax_pt_list:
+    for pt_list in ax_pt_list:
+        for i in pt_list:
             i.remove() 
-        del ax_pt_list[:]
+        del pt_list[:]
     plt.draw()
     #Reset the color cycle
-    global colors
-    colors = itertools.cycle(color_list)
+    reset_colors()
 
 #This is kind of a mess
 #Generate dictionary of different data sources
@@ -383,20 +417,20 @@ def get_source_dict():
     source_dict['TDM'] = {'fn_pattern':'_DEM-trans_reference-DEM', 'label':'TDM', 'marker':'H', 'error':1.0, 'type':'DEM'}
     source_dict['SPIRIT'] = {'fn_pattern':'SP', 'label':'SPIRIT', 'marker':'p', 'error':3.0, 'type':'DEM'}
     source_dict['GLISTIN'] = {'fn_pattern':'GLISTIN', 'label':'GLISTIN', 'marker':'<', 'error':2.0, 'type':'DEM'}
-    source_dict['DG_mono'] = {'fn_pattern':'-DEM_mono_32m_trans', 'label':'DG mono', 'marker':'D', 'error':1.0, 'type':'DEM'}
-    source_dict['DG_stereo'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo', 'marker':'s', 'error':0.5, 'type':'DEM'}
-    source_dict['DG_stereo_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo tiltcorr', 'marker':'s', 'error':0.5, 'type':'DEM'}
-    source_dict['DG_stereo_nocorr_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG stereo nocorr tiltcorr', 'marker':'s', 'alpha':0.5, 'error':0.5, 'type':'DEM'}
-    source_dict['DG_mono_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG mono tiltcorr', 'marker':'D', 'error':0.5, 'type':'DEM'}
-    source_dict['DG_mono_nocorr_tiltcorr'] = {'fn_pattern':'-DEM_32m_trans', 'label':'DG mono nocorr tiltcorr', 'marker':'D', 'error':0.5, 'alpha':0.5, 'type':'DEM'}
+    source_dict['DG_mono'] = {'fn_pattern':'-DEM_mono_[0-9]*m_trans', 'label':'DG mono', 'marker':'D', 'error':1.0, 'type':'DEM'}
+    source_dict['DG_stereo'] = {'fn_pattern':'-DEM_[0-9]*m_trans', 'label':'DG stereo', 'marker':'s', 'error':0.5, 'type':'DEM'}
+    source_dict['DG_stereo_tiltcorr'] = {'fn_pattern':'-DEM_[0-9]*m_trans', 'label':'DG stereo tiltcorr', 'marker':'s', 'error':0.5, 'type':'DEM'}
+    source_dict['DG_stereo_nocorr_tiltcorr'] = {'fn_pattern':'-DEM_[0-9]*m_trans', 'label':'DG stereo nocorr tiltcorr', 'marker':'s', 'alpha':0.5, 'error':0.5, 'type':'DEM'}
+    source_dict['DG_mono_tiltcorr'] = {'fn_pattern':'-DEM_[0-9]*m_trans', 'label':'DG mono tiltcorr', 'marker':'D', 'error':0.5, 'type':'DEM'}
+    source_dict['DG_mono_nocorr_tiltcorr'] = {'fn_pattern':'-DEM_[0-9]*m_trans', 'label':'DG mono nocorr tiltcorr', 'marker':'D', 'error':0.5, 'alpha':0.5, 'type':'DEM'}
 
     #Missing stereo align tiltcorr
-    source_dict['DG_stereo_nocorr_reftrend_medcorr'] = {'fn_pattern':'-DEM_32m_reftrend_medcorr', 'label':'DG stereo lint', 'marker':'+', 'error':1.5, 'type':'DEM'}
-    source_dict['DG_stereo_nocorr_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_32m_reftrend_tiltcorr', 'label':'DG stereo lint+tilt', 'marker':'+', 'error':2.0, 'type':'DEM'}
-    source_dict['DG_stereo_nocorr'] = {'fn_pattern':'-DEM_32m', 'label':'DG stereo nocorr', 'marker':'o', 'error':4.0, 'type':'DEM'}
-    source_dict['DG_mono_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_mono_32m_trans_reftrend_tiltcorr', 'label':'DG mono tilt', 'marker':'+', 'error':2.0, 'type':'DEM'}
-    source_dict['DG_mono_nocorr_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_mono_32m_reftrend_tiltcorr', 'label':'DG mono lint+tilt', 'marker':'+', 'error':2.5, 'type':'DEM'}
-    source_dict['DG_mono_nocorr'] = {'fn_pattern':'-DEM_mono_32m', 'label':'DG mono nocorr', 'marker':'d', 'error':5.0, 'type':'DEM'}
+    source_dict['DG_stereo_nocorr_reftrend_medcorr'] = {'fn_pattern':'-DEM_[0-9]*m_reftrend_medcorr', 'label':'DG stereo lint', 'marker':'+', 'error':1.5, 'type':'DEM'}
+    source_dict['DG_stereo_nocorr_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_[0-9]*m_reftrend_tiltcorr', 'label':'DG stereo lint+tilt', 'marker':'+', 'error':2.0, 'type':'DEM'}
+    source_dict['DG_stereo_nocorr'] = {'fn_pattern':'-DEM_[0-9]*m', 'label':'DG stereo nocorr', 'marker':'o', 'error':4.0, 'type':'DEM'}
+    source_dict['DG_mono_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_mono_[0-9]*m_trans_reftrend_tiltcorr', 'label':'DG mono tilt', 'marker':'+', 'error':2.0, 'type':'DEM'}
+    source_dict['DG_mono_nocorr_reftrend_tiltcorr'] = {'fn_pattern':'-DEM_mono_[0-9]*m_reftrend_tiltcorr', 'label':'DG mono lint+tilt', 'marker':'+', 'error':2.5, 'type':'DEM'}
+    source_dict['DG_mono_nocorr'] = {'fn_pattern':'-DEM_mono_[0-9]*m', 'label':'DG mono nocorr', 'marker':'d', 'error':5.0, 'type':'DEM'}
 
     #Velocity data (easier to add these to same source_dict
     source_dict['TSX'] = {'fn_pattern':'_tsx', 'label':'TSX', 'marker':'o', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
@@ -407,336 +441,231 @@ def get_source_dict():
     source_dict['None'] = {'fn_pattern':'None', 'label':'Other', 'marker':'+', 'error':0.0, 'type':'None'}
     return source_dict
 
-if len(sys.argv) != 2:
-    sys.exit("Usage: %s stack.npz" % os.path.basename(sys.argv[0]))
+def main():
+    if len(sys.argv) != 2:
+        sys.exit("Usage: %s stack.npz" % os.path.basename(sys.argv[0]))
 
-stack_fn = sys.argv[1]
+    stack_fn = sys.argv[1]
 
-print "Loading stack"
-s = malib.DEMStack(stack_fn=stack_fn, stats=True, trend=True, save=False)
-d = s.date_list_o
+    print "Loading stack"
+    s = malib.DEMStack(stack_fn=stack_fn, stats=True, trend=True, save=False)
+    global d
+    d = s.date_list_o
 
-min_dt = d[0]
-max_dt = d[-1]
-#Use these to set bounds to hardcode min/max of all stacks
-#import pytz
-#min_dt = datetime(1999,1,1)
-#min_dt = datetime(2007,1,1, tzinfo=pytz.utc)
-#max_dt = datetime(2015,12,31, tzinfo=pytz.utc)
+    d_ptp = d[-1] - d[0]
+    d_pad = 0.03*d_ptp
+    global min_dt
+    min_dt = d[0]-d_pad
+    global max_dt
+    max_dt = d[-1]+d_pad
+    #Use these to set bounds to hardcode min/max of all stacks
+    #import pytz
+    #min_dt = datetime(1999,1,1)
+    #min_dt = datetime(2007,1,1, tzinfo=pytz.utc)
+    #max_dt = datetime(2015,12,31, tzinfo=pytz.utc)
 
-source = np.ma.array(s.source)
-source_dict = get_source_dict()
-error = s.error
-gt = s.gt
-m = s.ma_stack
-val = s.stack_mean
-count = s.stack_count
-std = s.stack_std
-trend = s.stack_trend
-detrended_std = s.stack_detrended_std
-stack_type = 'dem'
-filter_outliers = False 
+    global source
+    source = np.ma.array(s.source)
+    global source_dict
+    source_dict = get_source_dict()
+    global error 
+    error = s.error
+    global gt
+    gt = s.gt
+    global m
+    m = s.ma_stack
+    val = s.stack_mean
+    count = s.stack_count
+    std = s.stack_std
+    trend = s.stack_trend
+    detrended_std = s.stack_detrended_std
+    stack_type = 'dem'
+    global filter_outliers
+    filter_outliers = False 
 
-if 'TSX' in source or 'ALOS' in source or 'RS1' in source or 'RS2' in source:
-    stack_type = 'velocity' 
+    global pad
+    global geoid_offset
+    global plot_trend
+    global plot_resid
+    global errorbars
 
-if 'zs' in stack_fn:
-    stack_type = 'racmo'
+    if 'TSX' in source or 'ALOS' in source or 'RS1' in source or 'RS2' in source:
+        stack_type = 'velocity' 
 
-if 'meltrate' in stack_fn:
-    stack_type = 'meltrate'
+    if 'zs' in stack_fn:
+        stack_type = 'racmo'
 
-if stack_type == 'velocity':
-    #pad = 3
-    #Use this for Jak stack with RADARSAT data
-    pad = 0
-    ylabel = 'Velocity (m/yr)'
-    ylabel_rel = 'Relative Velocity (m/yr)'
-    ylabel_resid = 'Detrended Velocity (m/yr)'
-    plot4_label = 'Detrended std (m/yr)'
-    hs = None
-    alpha = 1.0
-    geoid_offset = False
-    plot_trend = False
-    plot_resid = False
-    errorbars = False
-    if 'RS' in source:
-        filter_outliers = True
-elif stack_type == 'racmo':
-    pad = 0
-    ylabel = 'RACMOFDM zs (m)'
-    ylabel_rel = 'Relative RACMOFDM zs (m)'
-    ylabel_resid = 'Detrended RACMOFDM zs (m)'
-    plot4_label = 'Detrended std (m)'
-    hs = None
-    alpha = 1.0
-    geoid_offset = False
-    plot_trend = True 
-    plot_resid = True 
-    errorbars = False
-elif stack_type == 'meltrate':
-    pad = 3
-    ylabel = 'Melt Rate (m/yr)'
-    ylabel_rel = 'Relative Melt Rate (m/yr)'
-    ylabel_resid = 'Detrended Melt Rate (m/yr)'
-    plot4_label = 'Detrended std (m/yr)'
-    hs = None
-    alpha = 1.0
-    geoid_offset = False
-    plot_trend = True 
-    plot_resid = False 
-    errorbars = False
-else:
-    #pad = 5
-    #pad = 1
-    pad = 3
-    ylabel = 'Elevation (m EGM2008)'
-    ylabel_rel = 'Relative Elevation (m)'
-    ylabel_resid = 'Detrended Elevation (m)'
-    #plot4_label = 'Detrended std (m)'
-    plot4_label = 'Elevation std (m)'
-    s.mean_hillshade()
-    hs = s.stack_mean_hs
-    hs_clim = malib.calcperc(hs, (2,98))
-    alpha = 0.6
-    geoid_offset = False 
-    plot_trend = True
-    plot_resid = True 
-    errorbars = True
+    if 'meltrate' in stack_fn:
+        stack_type = 'meltrate'
 
-color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-colors = itertools.cycle(color_list)
-ms = 5
+    if stack_type == 'velocity':
+        #pad = 3
+        #Use this for Jak stack with RADARSAT data
+        pad = 0
+        ylabel = 'Velocity (m/yr)'
+        ylabel_rel = 'Relative Velocity (m/yr)'
+        ylabel_resid = 'Detrended Velocity (m/yr)'
+        plot4_label = 'Detrended std (m/yr)'
+        hs = None
+        alpha = 1.0
+        geoid_offset = False
+        plot_trend = False
+        plot_resid = False
+        errorbars = False
+        if 'RS' in source:
+            filter_outliers = True
+    elif stack_type == 'racmo':
+        pad = 0
+        ylabel = 'RACMOFDM zs (m)'
+        ylabel_rel = 'Relative RACMOFDM zs (m)'
+        ylabel_resid = 'Detrended RACMOFDM zs (m)'
+        plot4_label = 'Detrended std (m)'
+        hs = None
+        alpha = 1.0
+        geoid_offset = False
+        plot_trend = True 
+        plot_resid = True 
+        errorbars = False
+    elif stack_type == 'meltrate':
+        pad = 3
+        ylabel = 'Melt Rate (m/yr)'
+        ylabel_rel = 'Relative Melt Rate (m/yr)'
+        ylabel_resid = 'Detrended Melt Rate (m/yr)'
+        plot4_label = 'Detrended std (m/yr)'
+        hs = None
+        alpha = 1.0
+        geoid_offset = False
+        plot_trend = True 
+        plot_resid = False 
+        errorbars = False
+    else:
+        #pad = 5
+        #pad = 1
+        pad = 3
+        ylabel = 'Elevation (m EGM2008)'
+        ylabel_rel = 'Relative Elevation (m)'
+        ylabel_resid = 'Detrended Elevation (m)'
+        #plot4_label = 'Detrended std (m)'
+        plot4_label = 'Elevation std (m)'
+        s.mean_hillshade()
+        hs = s.stack_mean_hs
+        hs_clim = malib.calcperc(hs, (2,98))
+        alpha = 0.6
+        geoid_offset = False 
+        plot_trend = True
+        plot_resid = True 
+        errorbars = True
 
-#fig = plt.figure(0, figsize=(14,12), facecolor='white')
-fig = plt.figure(0, figsize=(14,12))
+    #Set color cycle
+    reset_colors()
 
-#These record all points plotted on the context plots
-ax0_pt_list = []
-ax1_pt_list = []
-ax2_pt_list = []
-ax3_pt_list = []
+    global ms
+    ms = 5
 
-interp = 'none'
-#interp = 'bicubic'
+    #fig = plt.figure(0, figsize=(14,12), facecolor='white')
+    fig = plt.figure(0, figsize=(14,12))
 
-#Overlay on mean_hs
-#Add colorbars
-imshow_kwargs = {'interpolation':interp}
+    #These record all points plotted on the context plots
+    global ax_pt_list
+    ax_pt_list = [[], [], [], []]
 
-val_clim = malib.calcperc(val, (2,98))
-ax0 = fig.add_subplot(221)
-if hs is not None:
-    ax0.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
-im0 = ax0.imshow(val, cmap=cpt_rainbow, clim=val_clim, alpha=alpha, **imshow_kwargs)
-#This was used for Stanton et al figure
-#val_clim = (0, 50)
-#im0 = ax0.imshow(val, cmap=cmaps.inferno, clim=val_clim, alpha=alpha, **imshow_kwargs)
-ax0.set_adjustable('box-forced')
-pltlib.hide_ticks(ax0)
-pltlib.add_cbar(ax0, im0, ylabel)
+    interp = 'none'
+    #interp = 'bicubic'
 
-count_clim = malib.calcperc(count, (2,98))
-#count_clim = malib.calcperc(count, (4,100))
-ax1 = fig.add_subplot(222, sharex=ax0, sharey=ax0)
-if hs is not None:
-    ax1.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
-im1 = ax1.imshow(count, cmap=cmaps.inferno, clim=count_clim, alpha=alpha, **imshow_kwargs)
-ax1.set_adjustable('box-forced')
-pltlib.hide_ticks(ax1)
-pltlib.add_cbar(ax1, im1, 'Count')
+    #Overlay on mean_hs
+    #Add colorbars
+    imshow_kwargs = {'interpolation':interp}
 
-#clim=(-20, 20)
-#trend_clim = malib.calcperc(trend, (1,99))
-#trend_clim = malib.calcperc(trend, (2,98))
-trend_clim = malib.calcperc(trend, (4,96))
-#trend_clim = malib.calcperc(trend, (10,90))
-max_abs_clim = max(np.abs(trend_clim))
-trend_clim = (-max_abs_clim, max_abs_clim)
-ax2 = fig.add_subplot(223, sharex=ax0, sharey=ax0)
-#ax0.set_title("Trend")
-if hs is not None:
-    ax2.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
-im2 = ax2.imshow(trend, cmap='RdBu', clim=trend_clim, alpha=alpha, **imshow_kwargs)
-ax2.set_adjustable('box-forced')
-pltlib.hide_ticks(ax2)
-pltlib.add_cbar(ax2, im2, 'Linear Trend (m/yr)')
+    val_clim = malib.calcperc(val, (2,98))
+    ax0 = fig.add_subplot(221)
+    if hs is not None:
+        ax0.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
+    im0 = ax0.imshow(val, cmap=cpt_rainbow, clim=val_clim, alpha=alpha, **imshow_kwargs)
+    #This was used for Stanton et al figure
+    #val_clim = (0, 50)
+    #im0 = ax0.imshow(val, cmap=cmaps.inferno, clim=val_clim, alpha=alpha, **imshow_kwargs)
+    ax0.set_adjustable('box-forced')
+    pltlib.hide_ticks(ax0)
+    pltlib.add_cbar(ax0, im0, ylabel)
 
-dstd_clim = (0, malib.calcperc(std, (0,95))[1])
-#dstd_clim = (0, malib.calcperc(detrended_std, (0,98))[1])
-ax3 = fig.add_subplot(224, sharex=ax0, sharey=ax0)
-if hs is not None:
-    ax3.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
-im3 = ax3.imshow(detrended_std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
-#im3 = ax3.imshow(std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
-ax3.set_adjustable('box-forced')
-pltlib.hide_ticks(ax3)
-#pltlib.add_cbar(ax3, im3, 'Detrended Std (m)')
-pltlib.add_cbar(ax3, im3, plot4_label)
+    count_clim = malib.calcperc(count, (2,98))
+    #count_clim = malib.calcperc(count, (4,100))
+    ax1 = fig.add_subplot(222, sharex=ax0, sharey=ax0)
+    if hs is not None:
+        ax1.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
+    im1 = ax1.imshow(count, cmap=cmaps.inferno, clim=count_clim, alpha=alpha, **imshow_kwargs)
+    ax1.set_adjustable('box-forced')
+    pltlib.hide_ticks(ax1)
+    pltlib.add_cbar(ax1, im1, 'Count')
 
-plt.autoscale(tight=True)
-plt.tight_layout()
+    #clim=(-20, 20)
+    #trend_clim = malib.calcperc(trend, (1,99))
+    #trend_clim = malib.calcperc(trend, (2,98))
+    trend_clim = malib.calcperc(trend, (4,96))
+    #trend_clim = malib.calcperc(trend, (10,90))
+    max_abs_clim = max(np.abs(trend_clim))
+    trend_clim = (-max_abs_clim, max_abs_clim)
+    ax2 = fig.add_subplot(223, sharex=ax0, sharey=ax0)
+    #ax0.set_title("Trend")
+    if hs is not None:
+        ax2.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
+    im2 = ax2.imshow(trend, cmap='RdBu', clim=trend_clim, alpha=alpha, **imshow_kwargs)
+    ax2.set_adjustable('box-forced')
+    pltlib.hide_ticks(ax2)
+    pltlib.add_cbar(ax2, im2, 'Linear Trend (m/yr)')
 
-cid = fig.canvas.mpl_connect('button_press_event', onclick)
+    dstd_clim = (0, malib.calcperc(std, (0,95))[1])
+    #dstd_clim = (0, malib.calcperc(detrended_std, (0,98))[1])
+    ax3 = fig.add_subplot(224, sharex=ax0, sharey=ax0)
+    if hs is not None:
+        ax3.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
+    im3 = ax3.imshow(detrended_std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
+    #im3 = ax3.imshow(std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
+    ax3.set_adjustable('box-forced')
+    pltlib.hide_ticks(ax3)
+    #pltlib.add_cbar(ax3, im3, 'Detrended Std (m)')
+    pltlib.add_cbar(ax3, im3, plot4_label)
 
-fig1 = plt.figure(1)
-ax_rel = fig1.add_subplot(111)
-fmt_ax(ax_rel, ylabel=ylabel_rel)
+    global ax_list
+    ax_list = [ax0, ax1, ax2, ax3]
 
-fig2 = plt.figure(2)
-ax_abs = fig2.add_subplot(111)
-fmt_ax(ax_abs, ylabel=ylabel)
+    plt.autoscale(tight=True)
+    plt.tight_layout()
 
-fig3 = plt.figure(3)
-ax_resid = fig3.add_subplot(111)
-fmt_ax(ax_resid, ylabel=ylabel_resid)
-plt.axhline(0, color='k', linestyle='-', linewidth=0.6)
+    cid = fig.canvas.mpl_connect('button_press_event', onclick)
 
-#plot_terminus_position()
+    fig1 = plt.figure(1)
+    global ax_rel
+    ax_rel = fig1.add_subplot(111)
+    fmt_ax(ax_rel, ylabel=ylabel_rel, legend_source=source)
 
-#Big3 termini
-#plot_point_map(-180024.975, -2279364.741)
-#plot_point_map(302396.059, -2576964.367)
-#plot_point_map(483016.446, -2286632.427)
+    fig2 = plt.figure(2)
+    global ax_abs
+    ax_abs = fig2.add_subplot(111)
+    fmt_ax(ax_abs, ylabel=ylabel, legend_source=source)
 
-#Jak firstround test
-#440.183345752 709.374366988 -180298.132936 -2278515.97974
-#422.286048902 733.237429455 -180870.846435 -2279279.59774
-#501.174681965 748.151843496 -178346.410177 -2279756.85899
-#499.186093426 771.020611693 -178410.04501 -2280488.65957
-#581.712517789 786.929320004 -175769.199431 -2280997.73824
-#580.718223519 804.826616854 -175801.016847 -2281570.45174
-#plot_point_map(-180298.132936, -2278515.97974)
-#plot_point_map(-180870.846435, -2279279.59774)
-#plot_point_map(-178346.410177, -2279756.85899)
-#plot_point_map(-178410.04501, -2280488.65957)
-#plot_point_map(-175769.199431, -2280997.73824)
-#plot_point_map(-175801.016847, -2281570.45174)
+    fig3 = plt.figure(3)
+    global ax_resid
+    ax_resid = fig3.add_subplot(111)
+    fmt_ax(ax_resid, ylabel=ylabel_resid, legend_source=source)
+    plt.axhline(0, color='k', linestyle='-', linewidth=0.6)
 
-#plot_point_map(-180036.266704, -2278639.54921)
-#plot_point_map(-178269.349311, -2280004.89447)
+    """
+    #print "Saving figure"
+    #fig_fn = os.path.splitext(s.stack_fn)[0] + '_context_maps.pdf'
+    fig_fn = os.path.splitext(s.stack_fn)[0] + '_context_maps.png'
+    plt.figure(0)
+    plt.tight_layout()
+    plt.savefig(fig_fn, dpi=300)
 
-"""
-#Joughin 2012 velocity points
-#M6 -180600,-2278600
-plot_point_map(-180600,-2278600)
-#M9 -178300,-2281100
-plot_point_map(-178300,-2281100)
-#M13 -173300,-2281500
-plot_point_map(-173300,-2281500)
-#M17 -169000,-2280200
-plot_point_map(-169000,-2280200)
-#M26 -165900,-2279500
-plot_point_map(-165900,-2279500)
-#M43 -160500,-2278400
-plot_point_map(-160500,-2278400)
-"""
+    fig_fn = os.path.splitext(s.stack_fn)[0] + '.png'
+    plt.figure(2)
+    #plt.ylim(70, 350)
+    plt.tight_layout()
+    plt.savefig(fig_fn, dpi=300)
+    """
 
-#Joughin 2012 dh/dt points
-#Z195 -182960,-2276400
-#Z216 -182120,-2278000
-#Z387 -176580,-2280900
-#Z603 -170240,-2279900
-#Z719 -163830,-2278600
-#Zupper -157950,-2277700
+    plt.show()
 
-"""
-Jak figures from AGU
-#plot_point_map(-180184.18903617435717,-2279738.798009647522122)
-#00,-183668.208997432579054,-2275141.501217651646584
-#plot_point_map(-183668.208997432579054,-2275141.501217651646584)
-#01,-182353.737558729044395,-2277448.532722311560065
-plot_point_map(-182353.737558729044395,-2277448.532722311560065)
-#02,-180462.508243858901551,-2277733.558416932355613
-plot_point_map(-180462.508243858901551,-2277733.558416932355613)
-#03,-180304.905800953129074,-2278472.948601203970611
-#plot_point_map(-180304.905800953129074,-2278472.948601203970611)
-#04,-180184.18903617435717,-2279738.798009647522122
-#plot_point_map(-180184.18903617435717,-2279738.798009647522122)
-#05,-180080.238488725677598,-2280038.913299863692373
-plot_point_map(-180080.238488725677598,-2280038.913299863692373)
-#06,-178433.795946879923576,-2280238.431286093313247
-plot_point_map(-178433.795946879923576,-2280238.431286093313247)
-#07,-178311.402560367772821,-2280577.10887617059052
-#plot_point_map(-178311.402560367772821,-2280577.10887617059052)
-#08,-174000.808084720250918,-2280617.347797763068229
-plot_point_map(-174000.808084720250918,-2280617.347797763068229)
-#09,-168209.756618797808187,-2279658.320166463498026
-plot_point_map(-168209.756618797808187,-2279658.320166463498026)
-#10,-159571.801450172642944,-2277824.095990514848381
-plot_point_map(-159571.801450172642944,-2277824.095990514848381)
-#11,-157875.060256335273152,-2277639.667599882464856
-plot_point_map(-157875.060256335273152,-2277639.667599882464856)
-#12,-149548.956730055389926,-2275476.825564261060208
-plot_point_map(-149548.956730055389926,-2275476.825564261060208)
-#13,-149763.564311884954805,-2273448.113267276901752
-plot_point_map(-149763.564311884954805,-2273448.113267276901752)
-"""
-
-"""
-#rock_highcount,-188335.577014962822432,-2278825.682833711151034
-plot_point_map(-188335.577014962822432,-2278825.682833711151034)
-#rock_highcount2,-188340.603025859134505,-2279752.981844075955451
-plot_point_map(-188340.603025859134505,-2279752.981844075955451)
-#rock_lowstd,-189906.205420052603586,-2277094.222079940605909
-plot_point_map(-189906.205420052603586,-2277094.222079940605909)
-#rock_lowstd2,-187219.802595987217501,-2279398.648075887002051
-plot_point_map(-187219.802595987217501,-2279398.648075887002051)
-#margin1,-188649.702695980813587,-2283087.74007376190275
-plot_point_map(-188649.702695980813587,-2283087.74007376190275)
-#margin2,-186704.636479117762065,-2280036.951459716074169
-plot_point_map(-186704.636479117762065,-2280036.951459716074169)
-#rock_n,-190672.672081736323889,-2266245.577560304664075
-plot_point_map(-190672.672081736323889,-2266245.577560304664075)
-#margin_n,-190740.523228836100316,-2264883.528607411310077
-plot_point_map(-190740.523228836100316,-2264883.528607411310077)
-"""
-
-#Stanton site
-#plot_point_map(-1606611, -301871)
-##plot_point_map(-1606742, -302164)
-#20120111
-#plot_point_map(-1606093.99136, -300364.168531)
-#20131221
-#plot_point_map(-1609115.131,-307316.722)
-#PIG2
-##plot_point_map(-1577500.90441, -310357.800583)
-#plot_point_map(-1578160.63304, -310685.589483)
-
-#PIG Lake center
-#plot_point_map(-1592550.279,-238959.242)
-#PIG off-lake spot
-#plot_point_map(-1596376.138,-239460.994)
-
-"""
-#Sequence over PIG grounding zone
-#Upstream
-#plot_point_map(-1589871.98024, -252042.841939)
-#Local high
-plot_point_map(-1590627.93726, -260798.30489)
-plot_point_map(-1591194.15313, -266842.566003)
-plot_point_map(-1594891.71034, -274648.520111)
-plot_point_map(-1595649.19602, -277318.978095)
-plot_point_map(-1596740.48894, -280913.825382)
-plot_point_map(-1597506.70072, -285461.777641)
-plot_point_map(-1598794.68739, -288514.359645)
-#plot_point_map(-1599776.10091, -291956.9575)
-plot_point_map(-1617820.29908, -285567.598353)
-"""
-
-"""
-#print "Saving figure"
-#fig_fn = os.path.splitext(s.stack_fn)[0] + '_context_maps.pdf'
-fig_fn = os.path.splitext(s.stack_fn)[0] + '_context_maps.png'
-plt.figure(0)
-plt.tight_layout()
-plt.savefig(fig_fn, dpi=300)
-
-fig_fn = os.path.splitext(s.stack_fn)[0] + '.png'
-plt.figure(2)
-#plt.ylim(70, 350)
-plt.tight_layout()
-plt.savefig(fig_fn, dpi=300)
-"""
-
-plt.show()
+if __name__ == "__main__":
+    main()
