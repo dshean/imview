@@ -215,7 +215,7 @@ def add_scalebar(ax, matchx=True, matchy=True, **kwargs):
         dl = abs(float(lbl[1].get_text()) - float(lbl[0].get_text()))
         #Adjust to nice round numbers here
         scaling = dl/float(dl_ax)
-        target = 500
+        target = 1000
         dl_ax = target/scaling 
         dl = target 
         return dl_ax, dl 
@@ -249,7 +249,10 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         clim = malib.calcperc(bma, clim_perc)
         #Deal with masked cases
         if clim[0] == clim[1]:
-            clim = (bma.fill_value, 255)
+            if clim[0] > bma.fill_value:
+                clim = (bma.fill_value, clim[0])
+            else:
+                clim = (clim[0], bma.fill_value)
         print "Colorbar limits (%0.1f-%0.1f%%): %0.3f %0.3f" % (clim_perc[0], clim_perc[1], clim[0], clim[1])
     else:
         print "Colorbar limits: %0.3f %0.3f" % (clim[0], clim[1])
