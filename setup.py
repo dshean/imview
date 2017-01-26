@@ -17,6 +17,7 @@ setup(name='imview',
     install_requires=['numpy','gdal','matplotlib', 'pygeotools'],
     #Note: this will write to /usr/local/bin
     scripts=['imview/imviewer.py','imview/iv.py','imview/stack_view.py', \
-    'imview/review_img.py', 'imview/color_hs.py']
+    'imview/review_img.py', 'imview/color_hs.py', \
+    'imview/gdaladdo_ro.sh', 'imview/hs.sh']
 )
 
