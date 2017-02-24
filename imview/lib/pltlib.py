@@ -19,6 +19,11 @@ def hide_ticks(ax):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
+def add_scalebar(ax, res, loc='lower left'):
+    from matplotlib_scalebar.scalebar import ScaleBar
+    sb = ScaleBar(res, location=left, border_pad=0.5)
+    ax.add_artist(sb)
+ 
 def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}):
     #cbar_kwargs['format'] = '%i'
     cbar = plt.colorbar(im, ax=ax, **cbar_kwargs) 

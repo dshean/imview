@@ -141,103 +141,6 @@ def ndanimate(a):
     plt.show()
     return an
 
-"""
-#Note: scalebar loc:
-best  0
-upper right   1
-upper left    2
-lower left    3
-lower right   4
-right     5
-center left   6
-center right  7
-lower center  8
-upper center  9
-center    10
-"""
-class AnchoredScaleBar(AnchoredOffsetbox):
-    def __init__(self, transform, sizex=0, sizey=0, labelx=None, labely=None, loc=3,
-                 pad=0.5, borderpad=0.5, sep=5, prop=None, **kwargs):
-        """
-        Draw a horizontal and/or vertical  bar with the size in data coordinate
-        of the give axes. A label will be drawn underneath (center-aligned).
-
-        - transform : the coordinate frame (typically axes.transData)
-        - sizex,sizey : width of x,y bar, in data units. 0 to omit
-        - labelx,labely : labels for x,y bars; None to omit
-        - loc : position in containing axes
-        - pad, borderpad : padding, in fraction of the legend font size (or prop)
-        - sep : separation between labels and bars in points.
-        - **kwargs : additional arguments passed to base class constructor
-        """
-        from matplotlib.patches import Rectangle
-        from matplotlib.offsetbox import AuxTransformBox, VPacker, HPacker, TextArea, DrawingArea
-        bars = AuxTransformBox(transform)
-        if sizex:
-            bars.add_artist(Rectangle((0,0), sizex, 0, fc="none", linewidth=2))
-        if sizey:
-            bars.add_artist(Rectangle((0,0), 0, sizey, fc="none",linewidth=2))
- 
-        if sizex and labelx:
-            bars = VPacker(children=[bars, TextArea(labelx, minimumdescent=False)],
-                           align="center", pad=0, sep=sep)
-        if sizey and labely:
-            bars = HPacker(children=[TextArea(labely), bars],
-                            align="center", pad=0, sep=sep)
-        if not 'frameon' in kwargs.keys():
-            kwargs['frameon']=False
- 
-        AnchoredOffsetbox.__init__(self, loc, pad=pad, borderpad=borderpad,
-                                   child=bars, prop=prop, **kwargs)
-        
- 
-def add_scalebar(ax, matchx=True, matchy=True, **kwargs):
-    """ Add scalebars to axes
-
-    Adds a set of scale bars to *ax*, matching the size to the ticks of the plot
-    and optionally hiding the x and y axes
-
-    - ax : the axis to attach ticks to
-    - matchx,matchy : if True, set size of scale bars to spacing between ticks
-                    if False, size should be set using sizex and sizey params
-    - **kwargs : additional arguments passed to AnchoredScaleBars
-
-    Returns created scalebar object
-    """
-
-    #Note: this is a hack using labels
-    #Should properly use the ax.transData information
-    def f(axis):
-        loc = axis.get_majorticklocs()
-        lbl = axis.get_majorticklabels()
-        dl_ax = abs(loc[1] - loc[0])
-        print lbl[1]
-        dl = abs(float(lbl[1].get_text()) - float(lbl[0].get_text()))
-        #Adjust to nice round numbers here
-        scaling = dl/float(dl_ax)
-        target = 1000
-        dl_ax = target/scaling 
-        dl = target 
-        return dl_ax, dl 
-
-    #Should get unit from srs
-    #unit = ' m'
-    unit = ' km'
-
-    if matchx:
-        l = f(ax.xaxis)
-        kwargs['sizex'] = l[0]
-        #kwargs['labelx'] = str(l[1]) + unit 
-        kwargs['labelx'] = str(l[1]/1000.) + unit 
-    if matchy:
-        l = f(ax.yaxis)
-        kwargs['sizey'] = l[0]
-        kwargs['labely'] = str(l[1]) + unit
-        
-    sb = AnchoredScaleBar(ax.transData, **kwargs)
-    ax.add_artist(sb)
- 
-    return sb
 
 #Note: can probably handle the cmap and clim in imshow_kwargs
 #def bma_fig(bma, cmap='gray', clim=malib.calcperc(bma,perc)):
@@ -322,6 +225,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
             scale_ticks(ax, ds)
         else:
             pltlib.hide_ticks(ax)
+        xres = geolib.get_res(ds)[0]
     else:
         pltlib.hide_ticks(ax)
     #This forces the black line outlining the image subplot to snap to the actual image dimensions
@@ -372,12 +276,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
 
     if scalebar is not None:
         scale_ticks(ax, ds)
-        if scalebar=='xy':
-            add_scalebar(ax,frameon=True)
-        elif scalebar=='x':
-            add_scalebar(ax,matchy=False,frameon=True)
-        elif scalebar=='y':
-            add_scalebar(ax,matchx=False,frameon=True)
+        pltlib.add_scalebar(ax, xres)
         if not ticks:
             pltlib.hide_ticks(ax)
 
@@ -442,7 +341,7 @@ def getparser():
     parser.add_argument('-link', action='store_true', help='share axes for all input images')
     parser.add_argument('-no_cbar', action='store_true', help='no colorbar')
     parser.add_argument('-ticks', action='store_true', help='display ticks')
-    parser.add_argument('-scalebar',type=str,default=None,choices=['xy','x','y'],help='Show scalebar in x and y, x, or y')
+    parser.add_argument('-scalebar',action='store_true', help='Show scalebar')
     parser.add_argument('filelist', nargs='+', help='input filenames (img1.tif img2.tif...)')
     return parser
 
@@ -459,7 +358,8 @@ def main():
     #'none', 'nearest', 'bilinear', 'bicubic', 'spline16', 'spline36', 'hanning', 'hamming', 
     #'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos'
     #{'interpolation':'bicubic', 'aspect':'auto'}
-    args['imshow_kwargs']={'interpolation':'bicubic'}
+    #args['imshow_kwargs']={'interpolation':'bicubic'}
+    args['imshow_kwargs']={'interpolation':'none'}
 
     if args['clipped'] and args['overlay'] is None:
         sys.exit("Must specify an overlay filename with option 'clipped'")
