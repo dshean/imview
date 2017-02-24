@@ -21,7 +21,7 @@ def hide_ticks(ax):
 
 def add_scalebar(ax, res, loc='lower left'):
     from matplotlib_scalebar.scalebar import ScaleBar
-    sb = ScaleBar(res, location=left, border_pad=0.5)
+    sb = ScaleBar(res, location=loc, border_pad=0.5)
     ax.add_artist(sb)
  
 def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}):

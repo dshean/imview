@@ -274,7 +274,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     if shp is not None:
         pltlib.shp_overlay(ax, ds, shp, gt=gt)
 
-    if scalebar is not None:
+    if scalebar:
         scale_ticks(ax, ds)
         pltlib.add_scalebar(ax, xres)
         if not ticks:
