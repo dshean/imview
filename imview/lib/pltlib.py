@@ -11,6 +11,12 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
+from imview.lib import gmtColormap
+cpt_rainbow = gmtColormap.get_rainbow()
+plt.register_cmap(cmap=cpt_rainbow)
+cpt_rainbow_r = gmtColormap.get_rainbow(rev=True) 
+plt.register_cmap(cmap=cpt_rainbow_r)
+
 #import itertools
 #color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 #colors = itertools.cycle(color_list)
@@ -19,10 +25,19 @@ def hide_ticks(ax):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
-def add_scalebar(ax, res, loc='lower left'):
+def add_scalebar(ax, res, loc='lower right'):
     from matplotlib_scalebar.scalebar import ScaleBar
     sb = ScaleBar(res, location=loc, border_pad=0.5)
     ax.add_artist(sb)
+
+def add_colorbar(ax, im, loc='center left', label=None):
+    from matplotlib_colorbar.colorbar import Colorbar
+    cbar = Colorbar(im, location=loc, border_pad=0.5)
+    if label is not None:
+        cbar.set_label(label)
+    cbar.set_alpha(1)
+    #cbar.draw_all()
+    ax.add_artist(cbar)
  
 def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}):
     #cbar_kwargs['format'] = '%i'
@@ -75,8 +90,8 @@ def fmt_date_ax(ax, minor=3):
 #Should probably isolate to geometry
 #Currently needs the ds associated with the imshow ax
 #Should probably set this in the ax transform - need to look into this
-#def shp_overlay(ax, ds, shp_fn, gt=None, color='g'):
-def shp_overlay(ax, ds, shp_fn, gt=None, color='w'):
+#def shp_overlay(ax, ds, shp_fn, gt=None, color='w'):
+def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
     from osgeo import ogr
     from pygeotools.lib import geolib
     #ogr2ogr -f "ESRI Shapefile" output.shp input.shp -clipsrc xmin ymin xmax ymax
