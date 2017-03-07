@@ -182,6 +182,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     if 'inferno' in cmap_name:
         #Use a gray background
         cmap.set_bad('0.5', alpha=1)
+        #cmap.set_bad('k', alpha=1)
     else:
         #This sets the nodata background to opaque black
         cmap.set_bad('k', alpha=1)
@@ -196,8 +197,9 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         #Note, 1 is opaque, 0 completely transparent
         #alpha = 0.6
         #bg_perc = (4,96)
-        bg_perc = (0.05, 99.95)
+        #bg_perc = (0.05, 99.95)
         #bg_perc = (1, 99)
+        bg_perc = (2, 98)
         bg_alpha = 1.0
         #bg_alpha = 0.5 
         bg_clim = malib.calcperc(bg, bg_perc)
@@ -205,6 +207,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         bg_cmap = plt.get_cmap(bg_cmap_name)
         if 'inferno' in cmap_name:
             bg_cmap.set_bad('0.5', alpha=1)
+            #bg_cmap.set_bad('k', alpha=1)
         else:
             bg_cmap.set_bad('k', alpha=1)
         #Set the overlay bad values to completely transparent, otherwise darkens the bg
@@ -379,6 +382,7 @@ def main():
         #Use min res
         res = res_stats[0]
         extent = geolib.ds_geom_union_extent(src_ds_list, t_srs=t_srs)
+        #extent = 'intersection'
         #print res, extent
 
     for n,fn in enumerate(args['filelist']):
@@ -495,12 +499,10 @@ def main():
         if ts:
             print "Timestamp list: ", ts
 
-        """
         if len(ts) == 1:
             plt.title(ts[0].date())
-        elif len(ts) == 2:
-            plt.title("%s to %s" % (ts[0].date(), ts[1].date()))
-        """
+        #elif len(ts) == 2:
+        #    plt.title("%s to %s" % (ts[0].date(), ts[1].date()))
             
         plt.tight_layout()
         
