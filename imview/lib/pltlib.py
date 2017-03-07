@@ -25,9 +25,23 @@ def hide_ticks(ax):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
-def add_scalebar(ax, res, loc='lower right'):
+def best_scalebar_location(a, length_pad=0.2, height_pad=0.1):
+    """
+    Attempt to determine best corner for scalebar based on number of unmasked pixels
+    """
+    length = int(a.shape[1]*length_pad)
+    height = int(a.shape[0]*height_pad)
+    d = {}
+    d['upper left'] = a[0:height,0:length].count()
+    d['lower left'] = a[-height:,0:length].count()
+    d['upper right'] = a[0:height,-length:].count()
+    d['lower right'] = a[-height:,-length:].count()
+    loc = min(d, key=d.get)
+    return loc
+
+def add_scalebar(ax, res, location='lower right'):
     from matplotlib_scalebar.scalebar import ScaleBar
-    sb = ScaleBar(res, location=loc, border_pad=0.5)
+    sb = ScaleBar(res, location=location, border_pad=0.5)
     ax.add_artist(sb)
 
 def add_colorbar(ax, im, loc='center left', label=None):
@@ -39,11 +53,13 @@ def add_colorbar(ax, im, loc='center left', label=None):
     #cbar.draw_all()
     ax.add_artist(cbar)
  
-def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}):
+#def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}):
+def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}, fontsize=8):
     #cbar_kwargs['format'] = '%i'
     cbar = plt.colorbar(im, ax=ax, **cbar_kwargs) 
     if label is not None:
-        cbar.set_label(label)
+        cbar.set_label(label, size=fontsize)
+    cbar.ax.tick_params(labelsize=fontsize)
     #Set colorbar to be opaque, even if image is transparent
     cbar.set_alpha(1)
     cbar.draw_all()
