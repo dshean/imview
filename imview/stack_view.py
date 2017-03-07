@@ -140,6 +140,7 @@ def sample_stack(ex, ey, geoid_offset=False, pad=3):
     else:
         print "Sampling with pad: %i" % pad
         if pad == 0:
+            #Note: need to fix this - need integer indices, or interpolate
             v = m[:,ey,ex]
         else:
             window_x = np.around(np.clip([ex-pad, ex+pad+1], 0, m.shape[2]-1)).astype(int)
@@ -438,6 +439,7 @@ def get_source_dict():
     source_dict['RS1'] = {'fn_pattern':'_rsat1', 'label':'RS1', 'marker':'H', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
     source_dict['RS2'] = {'fn_pattern':'_rsat2', 'label':'RS2', 'marker':'p', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
     source_dict['LS8'] = {'fn_pattern':'_ls8', 'label':'LS8', 'marker':'p', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
+    source_dict['LS8_golive'] = {'fn_pattern':'_vv', 'label':'LS8_golive', 'marker':'p', 'error':np.nan, 'error_perc':0.03, 'type':'velocity'}
     source_dict['None'] = {'fn_pattern':'None', 'label':'Other', 'marker':'+', 'error':0.0, 'type':'None'}
     return source_dict
 
@@ -492,6 +494,9 @@ def main():
     if 'TSX' in source or 'ALOS' in source or 'RS1' in source or 'RS2' in source:
         stack_type = 'velocity' 
 
+    if '_vv' in stack_fn:
+        stack_type = 'velocity' 
+
     if 'zs' in stack_fn:
         stack_type = 'racmo'
 
@@ -500,12 +505,16 @@ def main():
 
     if stack_type == 'velocity':
         #pad = 3
+        pad = 1
         #Use this for Jak stack with RADARSAT data
-        pad = 0
-        ylabel = 'Velocity (m/yr)'
-        ylabel_rel = 'Relative Velocity (m/yr)'
-        ylabel_resid = 'Detrended Velocity (m/yr)'
-        plot4_label = 'Detrended std (m/yr)'
+        #pad = 0
+        #interval = 'yr'
+        interval = 'day'
+        ylabel = 'Velocity (m/%s)' % interval
+        ylabel_rel = 'Relative Velocity (m/%s)' % interval
+        ylabel_resid = 'Detrended Velocity (m/%s)' % interval
+        #plot4_label = 'Detrended std (m/%s)' % interval
+        plot4_label = 'Velocity std (m/%s)' % interval
         hs = None
         alpha = 1.0
         geoid_offset = False
@@ -540,8 +549,8 @@ def main():
         errorbars = False
     else:
         #pad = 5
-        #pad = 1
-        pad = 3
+        pad = 1
+        #pad = 3
         ylabel = 'Elevation (m EGM2008)'
         ylabel_rel = 'Relative Elevation (m)'
         ylabel_resid = 'Detrended Elevation (m)'
@@ -619,8 +628,8 @@ def main():
     ax3 = fig.add_subplot(224, sharex=ax0, sharey=ax0)
     if hs is not None:
         ax3.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
-    im3 = ax3.imshow(detrended_std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
-    #im3 = ax3.imshow(std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
+    #im3 = ax3.imshow(detrended_std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
+    im3 = ax3.imshow(std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
     ax3.set_adjustable('box-forced')
     pltlib.hide_ticks(ax3)
     #pltlib.add_cbar(ax3, im3, 'Detrended Std (m)')
