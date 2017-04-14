@@ -362,10 +362,12 @@ def main():
     if args['of']:
         args['full'] = True
 
-    #Note, imshow has many interpolation types:
+    #imshow has many interpolation types:
     #'none', 'nearest', 'bilinear', 'bicubic', 'spline16', 'spline36', 'hanning', 'hamming', 
     #'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos'
     #{'interpolation':'bicubic', 'aspect':'auto'}
+
+    #Note: matpltolib v2.0+ interpolates across masked values, disable interpolation for now
     #args['imshow_kwargs']={'interpolation':'bicubic'}
     args['imshow_kwargs']={'interpolation':'none'}
 
