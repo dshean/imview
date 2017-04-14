@@ -32,10 +32,10 @@ def best_scalebar_location(a, length_pad=0.2, height_pad=0.1):
     length = int(a.shape[1]*length_pad)
     height = int(a.shape[0]*height_pad)
     d = {}
-    d['upper left'] = a[0:height,0:length].count()
-    d['lower left'] = a[-height:,0:length].count()
     d['upper right'] = a[0:height,-length:].count()
+    d['upper left'] = a[0:height,0:length].count()
     d['lower right'] = a[-height:,-length:].count()
+    d['lower left'] = a[-height:,0:length].count()
     loc = min(d, key=d.get)
     return loc
 

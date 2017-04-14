@@ -196,13 +196,15 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     if bg is not None:
         #Note, 1 is opaque, 0 completely transparent
         #alpha = 0.6
-        #bg_perc = (4,96)
         #bg_perc = (0.05, 99.95)
         #bg_perc = (1, 99)
         bg_perc = (2, 98)
+        #bg_perc = (3,97)
+        #bg_perc = (4,96)
         bg_alpha = 1.0
         #bg_alpha = 0.5 
         bg_clim = malib.calcperc(bg, bg_perc)
+        #bg_clim = (115, 255)
         bg_cmap_name = 'gray'
         bg_cmap = plt.get_cmap(bg_cmap_name)
         if 'inferno' in cmap_name:
@@ -279,7 +281,10 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
 
     if scalebar:
         scale_ticks(ax, ds)
-        pltlib.add_scalebar(ax, xres)
+        sb_loc = pltlib.best_scalebar_location(bma)
+        #Force scalebar position
+        #sb_loc = 'lower right'
+        #pltlib.add_scalebar(ax, xres, location=sb_loc)
         if not ticks:
             pltlib.hide_ticks(ax)
 
@@ -499,8 +504,8 @@ def main():
         if ts:
             print "Timestamp list: ", ts
 
-        if len(ts) == 1:
-            plt.title(ts[0].date())
+        #if len(ts) == 1:
+        #    plt.title(ts[0].date())
         #elif len(ts) == 2:
         #    plt.title("%s to %s" % (ts[0].date(), ts[1].date()))
             
