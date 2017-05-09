@@ -284,7 +284,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         sb_loc = pltlib.best_scalebar_location(bma)
         #Force scalebar position
         #sb_loc = 'lower right'
-        #pltlib.add_scalebar(ax, xres, location=sb_loc)
+        pltlib.add_scalebar(ax, xres, location=sb_loc)
         if not ticks:
             pltlib.hide_ticks(ax)
 
