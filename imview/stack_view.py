@@ -549,8 +549,8 @@ def main():
         errorbars = False
     else:
         #pad = 5
-        pad = 1
-        #pad = 3
+        #pad = 1
+        pad = 3
         ylabel = 'Elevation (m EGM2008)'
         ylabel_rel = 'Relative Elevation (m)'
         ylabel_resid = 'Detrended Elevation (m)'
@@ -625,6 +625,7 @@ def main():
 
     dstd_clim = (0, malib.calcperc(std, (0,95))[1])
     #dstd_clim = (0, malib.calcperc(detrended_std, (0,98))[1])
+    #dstd_clim = (0,1)
     ax3 = fig.add_subplot(224, sharex=ax0, sharey=ax0)
     if hs is not None:
         ax3.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
@@ -673,6 +674,13 @@ def main():
     plt.tight_layout()
     plt.savefig(fig_fn, dpi=300)
     """
+
+    #Ngozumpa rock points
+    plot_point_map(471730.519971, 3100956.30059)
+    plot_point_map(474114.751943, 3099631.72727)
+    plot_point_map(469023.783192, 3100184.59266)
+    plot_point_map(473273.935837, 3101520.684)
+    plot_point_map(472696.889042, 3098235.39259)
 
     plt.show()
 
