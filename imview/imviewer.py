@@ -182,6 +182,8 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     if 'inferno' in cmap_name:
         #Use a gray background
         cmap.set_bad('0.5', alpha=1)
+        #This may be better 
+        #cmap.set_bad('0.1', alpha=1)
         #cmap.set_bad('k', alpha=1)
     else:
         #This sets the nodata background to opaque black
@@ -194,7 +196,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
 
     #If a background image is provided, plot it first
     if bg is not None:
-        #Note, 1 is opaque, 0 completely transparent
+        #Note, alpha=1 is opaque, 0 completely transparent
         #alpha = 0.6
         #bg_perc = (0.05, 99.95)
         #bg_perc = (1, 99)
@@ -343,7 +345,6 @@ def getparser():
     parser.add_argument('-dpi', type=float, default=None, help='specify output dpi') 
     parser.add_argument('-outsize', nargs=2, type=float, default=None, help='specify output dimensions in inches (w h)') 
     parser.add_argument('-overlay', default=None, help='specify basemap for overlay')
-    parser.add_argument('-clipped',action='store_true',help='Do not warp to match overlay')
     parser.add_argument('-shp', default=None, help='specify shapefile for overlay')
     parser.add_argument('-alpha', type=float, default=0.5, help='Overlay transparency (0 is transparent, 1 opaque)')
     parser.add_argument('-link', action='store_true', help='share axes for all input images')
@@ -371,14 +372,16 @@ def main():
     #args['imshow_kwargs']={'interpolation':'bicubic'}
     args['imshow_kwargs']={'interpolation':'none'}
 
-    if args['clipped'] and args['overlay'] is None:
-        sys.exit("Must specify an overlay filename with option 'clipped'")
-
     #Set this as the background numpy array
     args['bg'] = None
 
     if args['shp'] is not None:
         print args['shp']
+
+    #Need to implement better extent handling for link and overlay
+    #Can use warplib extent parsing
+    extent = 'first'
+    #extent = 'union'
 
     if args['link']:
         fig = plt.figure(0)
@@ -388,8 +391,9 @@ def main():
         res_stats = geolib.get_res_stats(src_ds_list, t_srs=t_srs)
         #Use min res
         res = res_stats[0]
+        extent = 'intersection'
         extent = geolib.ds_geom_union_extent(src_ds_list, t_srs=t_srs)
-        #extent = 'intersection'
+        #extent = geolib.ds_geom_intersection_extent(src_ds_list, t_srs=t_srs)
         #print res, extent
 
     for n,fn in enumerate(args['filelist']):
@@ -409,31 +413,16 @@ def main():
         fig.canvas.set_window_title(os.path.split(fn)[1])
         #fig.suptitle(os.path.split(fn)[1], fontsize=10)
 
-        #Note: warplib SHOULD internally check to see if extent/resolution/projection are identical
-        #This eliminates the need for a clipped flag
-        #If user has already warped the background and source data 
         if args['overlay']:
-            if args['clipped']: 
-                src_ds = gdal.Open(fn, gdal.GA_ReadOnly)
-                #Only load up the bg array once
-                if args['bg'] is None:
-                    #Need to check that background fn exists
-                    print "%s background" % args['overlay']
-                    bg_ds = gdal.Open(args['overlay'], gdal.GA_ReadOnly)
-                    #Check image dimensions
-                    args['bg'] = get_bma(bg_ds, 1, args['full'])
-            else:
-                #Clip/warp background dataset to match overlay dataset 
-                #src_ds, bg_ds = warplib.memwarp_multi_fn([fn, args['overlay']], extent='union')
-                src_ds, bg_ds = warplib.memwarp_multi_fn([fn, args['overlay']], extent='first')
-                #src_ds, bg_ds = warplib.memwarp_multi_fn([fn, args['overlay']], res='min', extent='first')
-                #Want to load up the unique bg array for each input
-                args['bg'] = get_bma(bg_ds, 1, args['full'])
+            #Should automatically search for shaded relief with same base fn
+            #bg_fn = os.path.splitext(fn)[0]+'_hs_az315.tif'
+            #Clip/warp background dataset to match overlay dataset 
+            src_ds, bg_ds = warplib.memwarp_multi_fn([fn, args['overlay']], extent=extent)
+            #Want to load up the unique bg array for each input
+            args['bg'] = get_bma(bg_ds, 1, args['full'])
         else:
             src_ds = gdal.Open(fn, gdal.GA_ReadOnly)
             if args['link']:
-                #Not sure why, but this still warps all linked ds, even when identical res/extent/srs
-                #src_ds = warplib.warp(src_ds, res=res, extent=extent, t_srs=t_srs)
                 src_ds = warplib.memwarp_multi([src_ds,], res=res, extent=extent, t_srs=t_srs)[0]
 
         cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}
@@ -506,10 +495,11 @@ def main():
         if ts:
             print "Timestamp list: ", ts
 
-        #if len(ts) == 1:
-        #    plt.title(ts[0].date())
-        #elif len(ts) == 2:
-        #    plt.title("%s to %s" % (ts[0].date(), ts[1].date()))
+        if len(ts) == 1:
+            #plt.title(ts[0].date(), fontdict={'fontsize':16})
+            plt.title(ts[0].date(), fontdict={'fontsize':12})
+        elif len(ts) > 1:
+            plt.title("%s to %s" % (ts[0].date(), ts[1].date()))
             
         plt.tight_layout()
         
