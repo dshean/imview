@@ -17,8 +17,8 @@ parallel "gdaldem hillshade $gdal_opt $gdaldem_opt -alt 30 -azimuth {1} {2} {2.}
 #29-pixel window for Gaussian filter (pygeotools)
 s=29
 echo "Smoothing input DEM"
-filter.py $in $s 
-smooth=${in%.*}_filt${s}px.tif
+filter.py $in -filt gauss -param $s 
+smooth=${in%.*}_gaussfilt_${s}px.tif
 echo "Generating aspect map"
 gdaldem aspect $gdal_opt $gdaldem_opt $smooth ${smooth%.*}_aspect.tif
 
