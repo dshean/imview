@@ -200,9 +200,9 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         #alpha = 0.6
         #bg_perc = (0.05, 99.95)
         #bg_perc = (1, 99)
-        bg_perc = (2, 98)
+        #bg_perc = (2, 98)
         #bg_perc = (3,97)
-        #bg_perc = (4,96)
+        bg_perc = (4,96)
         bg_alpha = 1.0
         #bg_alpha = 0.5 
         bg_clim = malib.calcperc(bg, bg_perc)
@@ -346,7 +346,7 @@ def getparser():
     parser.add_argument('-outsize', nargs=2, type=float, default=None, help='specify output dimensions in inches (w h)') 
     parser.add_argument('-overlay', default=None, help='specify basemap for overlay')
     parser.add_argument('-shp', default=None, help='specify shapefile for overlay')
-    parser.add_argument('-alpha', type=float, default=0.5, help='Overlay transparency (0 is transparent, 1 opaque)')
+    parser.add_argument('-alpha', type=float, default=0.4, help='Overlay transparency (0 is transparent, 1 opaque)')
     parser.add_argument('-link', action='store_true', help='share axes for all input images')
     parser.add_argument('-no_cbar', action='store_true', help='no colorbar')
     parser.add_argument('-ticks', action='store_true', help='display ticks')
