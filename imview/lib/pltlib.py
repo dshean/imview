@@ -192,3 +192,43 @@ def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
                 else:
                     pX, pY = geolib.mapToPixel(np.array(mX), np.array(mY), gt)
                     ax.plot(pX, pY, color=color, **attr)
+
+#Added this here for convenience, needs further testing
+def plot_2dhist(ax, x, y, xlim=None, ylim=None, log=False, maxline=True, trendline=False):
+    from pygeotools.lib import malib
+    #Should compute number of bins automatically based on input values, xlim and ylim
+    bins = (100, 100)
+    common_mask = ~(malib.common_mask([x,y]))
+    x = x[common_mask]
+    y = y[common_mask]
+    if xlim is None:
+        #xlim = (x.min(), x.max())
+        xlim = malib.calcperc(x, (0.1, 99.9))
+    if ylim is None:
+        #ylim = (y.min(), y.max())
+        ylim = malib.calcperc(y, (0.1, 99.9))
+    xlim = np.array(xlim)
+    ylim = np.array(ylim)
+    H, xedges, yedges = np.histogram2d(x,y,range=[xlim,ylim],bins=bins)
+    H = np.rot90(H)
+    H = np.flipud(H)
+    #Mask any empty bins
+    Hmasked = np.ma.masked_where(H==0,H)
+    #Hmasked = H
+    H_clim = malib.calcperc(Hmasked, (2,98))
+    if log:
+        import matplotlib.colors as colors
+        ax.pcolormesh(xedges,yedges,Hmasked,cmap='inferno',norm=colors.LogNorm(vmin=H_clim[0],vmax=H_clim[1]))
+    else:
+        ax.pcolormesh(xedges,yedges,Hmasked,cmap='inferno',vmin=H_clim[0],vmax=H_clim[1])
+    if maxline:
+        #Add line for max values in each x bin
+        Hmed_idx = np.ma.argmax(Hmasked, axis=0)
+        ymax = (yedges[:-1]+np.diff(yedges))[Hmed_idx]
+        ax.plot(xedges[:-1]+np.diff(xedges), ymax, color='dodgerblue',lw=1.0)
+    if trendline:
+        #Add trendline
+        import scipy.stats
+        y_slope, y_intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y)
+        y_f = y_slope * xlim + y_intercept
+        ax.plot(xlim, y_f, color='limegreen', ls='--', lw=0.5)
