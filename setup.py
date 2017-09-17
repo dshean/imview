@@ -6,7 +6,7 @@ from distutils.core import setup
 #python setup.py sdist upload
 
 setup(name='imview',
-    version='0.2.0',
+    version='0.3.0',
     description='Image viewers for geospatial data',
     author='David Shean',
     author_email='dshean@gmail.com',
