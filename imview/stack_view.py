@@ -674,13 +674,14 @@ def main():
     plt.tight_layout()
     plt.savefig(fig_fn, dpi=300)
     """
-
+    """
     #Ngozumpa rock points
     plot_point_map(471730.519971, 3100956.30059)
     plot_point_map(474114.751943, 3099631.72727)
     plot_point_map(469023.783192, 3100184.59266)
     plot_point_map(473273.935837, 3101520.684)
     plot_point_map(472696.889042, 3098235.39259)
+    """
 
     plt.show()
 
