@@ -137,6 +137,7 @@ def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
         #http://matplotlib.org/users/path_tutorial.html
         elif geom_type == 3:
             print "Polygon support not yet implemented"
+            #ogr2ogr -nlt LINESTRING out.shp in.shp
             l, mX, mY = geolib.line2pts(geom)
             z = 0
             attr = {'marker':None, 'linestyle':'-', 'facecolor':'w'}
