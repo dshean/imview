@@ -7,6 +7,7 @@
 #Needs to be cleaned up, but should work out of the box
 
 #Todo
+#Scalebar adjustment when loading subsampled input bma
 #access from malib
 #Clean up overlay handling
 #pyproj or geolib to go from projected coord to lat/lon
@@ -207,6 +208,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         #bg_alpha = 0.5 
         bg_clim = malib.calcperc(bg, bg_perc)
         #bg_clim = (115, 255)
+        bg_clim = (1, 255)
         bg_cmap_name = 'gray'
         bg_cmap = plt.get_cmap(bg_cmap_name)
         if 'inferno' in cmap_name:
@@ -279,7 +281,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
 
     #Plot shape overlay, moved code to pltlib
     if shp is not None:
-        pltlib.shp_overlay(ax, ds, shp, gt=gt)
+        pltlib.shp_overlay(ax, ds, shp, gt=gt, color='k')
 
     if scalebar:
         scale_ticks(ax, ds)
@@ -351,6 +353,7 @@ def getparser():
     parser.add_argument('-no_cbar', action='store_true', help='no colorbar')
     parser.add_argument('-ticks', action='store_true', help='display ticks')
     parser.add_argument('-scalebar',action='store_true', help='Show scalebar')
+    parser.add_argument('-title', type=str, default=None, help='Specify title')
     parser.add_argument('filelist', nargs='+', help='input filenames (img1.tif img2.tif...)')
     return parser
 
@@ -495,11 +498,16 @@ def main():
         if ts:
             print "Timestamp list: ", ts
 
-        if len(ts) == 1:
-            #plt.title(ts[0].date(), fontdict={'fontsize':16})
-            plt.title(ts[0].date(), fontdict={'fontsize':12})
-        elif len(ts) > 1:
-            plt.title("%s to %s" % (ts[0].date(), ts[1].date()))
+        
+        title = args['title']
+        if title is None:
+            if len(ts) == 1:
+                title = ts[0].date()
+            elif len(ts) > 1:
+                title = "%s to %s" % (ts[0].date(), ts[1].date())
+        
+        if title is not None:
+            plt.title(title, fontdict={'fontsize':12})
             
         plt.tight_layout()
         
