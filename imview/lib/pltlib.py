@@ -54,7 +54,7 @@ def add_colorbar(ax, im, loc='center left', label=None):
     ax.add_artist(cbar)
  
 #def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}):
-def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}, fontsize=8):
+def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}, fontsize=10):
     #cbar_kwargs['format'] = '%i'
     cbar = plt.colorbar(im, ax=ax, **cbar_kwargs) 
     if label is not None:
