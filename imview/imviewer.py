@@ -316,7 +316,7 @@ def get_bma(src_ds, bn, full):
     if full:
         return iolib.ds_getma(src_ds, bn)
     else:
-        return iolib.gdal_getma_sub(src_ds, bn)
+        return iolib.ds_getma_sub(src_ds, bn)
 
 def getparser():
     #Generate list of valid mpl colormaps

@@ -97,7 +97,7 @@ def main():
             plt.imshow(im, cmap=cmap)
         else:
             ds = gdal.Open(fn)
-            a = iolib.gdal_getma_sub(ds)
+            a = iolib.ds_getma_sub(ds)
             perc = malib.calcperc(a)
             cmap = 'cpt_rainbow'
             alpha = 1.0
@@ -107,7 +107,7 @@ def main():
                 hs_fn = os.path.splitext(fn)[0]+'_hs.tif'
                 if os.path.exists(hs_fn):
                     hs_ds = gdal.Open(hs_fn)
-                    hs = iolib.gdal_getma_sub(hs_ds)
+                    hs = iolib.ds_getma_sub(hs_ds)
                     hs_perc = malib.calcperc(hs)
                     plt.imshow(hs, cmap='gray', clim=hs_perc)
                     alpha = 0.5
