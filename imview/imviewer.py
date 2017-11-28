@@ -420,7 +420,7 @@ def main():
             #Should automatically search for shaded relief with same base fn
             #bg_fn = os.path.splitext(fn)[0]+'_hs_az315.tif'
             #Clip/warp background dataset to match overlay dataset 
-            src_ds, bg_ds = warplib.memwarp_multi_fn([fn, args['overlay']], extent=extent)
+            src_ds, bg_ds = warplib.memwarp_multi_fn([fn, args['overlay']], extent=extent, res='min')
             #Want to load up the unique bg array for each input
             args['bg'] = get_bma(bg_ds, 1, args['full'])
         else:
