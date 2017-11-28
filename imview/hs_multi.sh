@@ -35,4 +35,4 @@ image_calc -o ${in%.*}_hs_multi.tif -d uint8 -c '255*(var_0*var_4 + var_1*var_5 
 #There was an issue with new build of image_calc and C++ version on Pleiades
 #~/sw/asp/StereoPipeline-2.5.3-2017-01-24-x86_64-Linux/bin/image_calc -o ${in%.*}_hs_multi.tif -d uint8 -c '255*(var_0*var_4 + var_1*var_5 + var_2*var_6 + var_3*var_7)/2.0' ${smooth%.*}_aspect_w{225,270,315,360}.tif ${in%.*}_hs_az{225,270,315,360}.tif 
 
-rm $smooth ${smooth%.*}_aspect.tif ${smooth%.*}_aspect_w{225,270,315,360}.tif ${in%.*}_hs_az{225,270,360}.tif
+rm $smooth ${smooth%.*}_aspect.tif ${smooth%.*}_aspect_w{225,270,360}.tif ${in%.*}_hs_az{225,270,360}.tif
