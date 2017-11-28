@@ -5,8 +5,11 @@
 
 gdal_opt='-co TILED=YES -co COMPRESS=LZW -co BIGTIFF=IF_SAFER'
 
+gdaldem_opt=''
 #gdaldem_opt='-alg ZevenbergenThorne -compute_edges'
-gdaldem_opt='-compute_edges'
+gdaldem_opt+=' -compute_edges'
+#Should check to see if srs is geographic, then automatically apply scale
+#gdaldem_opt+=' -s 111120'
 
 #Create shaded relief with illumnation from the following azimuths
 #az_list="000 045 090 135 180 225 270 315"
