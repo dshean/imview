@@ -51,10 +51,6 @@ plt.register_cmap(cmap=cpt_rainbow_r)
 #Global variable holding array under cursor
 gbma = None
 
-#Use to specify a constant set of contours
-#c_fn = 'raster.tif'
-#bma_c = iolib.fn_getma(c_fn)
-
 #This adds the z-value to cursor coordinate info
 def format_coord(x, y):
     x = int(x + 0.5)
@@ -145,8 +141,8 @@ def ndanimate(a):
 
 #Note: can probably handle the cmap and clim in imshow_kwargs
 #def bma_fig(bma, cmap='gray', clim=malib.calcperc(bma,perc)):
-#def bma_fig(fig, bma, cmap='gist_rainbow_r', clim=None, bg=None, n_subplt=1, subplt=1, label=None, cint=None, **imshow_kwargs):
-def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, bg_perc=(2,98), n_subplt=1, subplt=1, label=None, title=None, cint=None, alpha=0.5, ticks=False, scalebar=None, ds=None, shp=None, imshow_kwargs={'interpolation':'nearest'}, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}, **kwargs):
+#def bma_fig(fig, bma, cmap='gist_rainbow_r', clim=None, bg=None, n_subplt=1, subplt=1, label=None, contour_int=None, **imshow_kwargs):
+def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, bg_perc=(2,98), n_subplt=1, subplt=1, label=None, title=None, contour_int=None, contour_fn=None, alpha=0.5, ticks=False, scalebar=None, ds=None, shp=None, imshow_kwargs={'interpolation':'nearest'}, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}, **kwargs):
     #We don't use the kwargs, just there to save parsing in main
     
     if clim is None:
@@ -252,32 +248,42 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
 
         cbar = pltlib.add_cbar(ax, imgplot, label=label, cbar_kwargs=cbar_kwargs)
    
-    #Plot contours every cint interval and update colorbar appropriately
-    if cint is not None:
-        if bma_c is not None:
-            bma_clim = malib.calcperc(bma_c)
-            #PIG bed ridge contours
-            #bma_clim = (-1300, -300)
-            #Jak front shear margin contours
-            #bma_clim = (2000, 4000)
-            cstart = int(np.floor(bma_clim[0] / cint)) * cint 
-            cend = int(np.ceil(bma_clim[1] / cint)) * cint
+    #Plot contours every contour_int interval and update colorbar appropriately
+    if contour_int is not None:
+        if contour_fn is not None:
+            contour_bma = iolib.fn_getma(contour_fn)
+            contour_bma_clim = malib.calcperc(contour_bma)
         else:
-            #cstart = int(np.floor(bma.min() / cint)) * cint 
-            #cend = int(np.ceil(bma.max() / cint)) * cint
-            cstart = int(np.floor(clim[0] / cint)) * cint 
-            cend = int(np.ceil(clim[1] / cint)) * cint
+            contour_bma = bma
+            contour_bma_clim = clim
+
+        #PIG bed ridge contours
+        #bma_clim = (-1300, -300)
+        #Jak front shear margin contours
+        #bma_clim = (2000, 4000)
+        contour_bma_clim = (100, 250)
+        cstart = int(np.floor(contour_bma_clim[0] / contour_int)) * contour_int 
+        cend = int(np.ceil(contour_bma_clim[1] / contour_int)) * contour_int
 
         #Turn off dashed negative (beds are below sea level)
         #matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
 
-        clvl = np.arange(cstart, cend+1, cint)
-        #contours = ax.contour(bma_c, colors='k', levels=clvl, alpha=0.5)
-        contours = ax.contour(bma_c, cmap='gray', linestyle='--', levels=clvl, alpha=1.0)
+        clvl = np.arange(cstart, cend+1, contour_int)
+        contour_prop = {'levels':clvl, 'linestyle':'-', 'linewidths':0.5, 'alpha':1.0}
+        #contours = ax.contour(contour_bma, colors='k', **contour_prop)
+        #contour_cmap = 'gray'
+        contour_cmap = 'gray_r'
+        #This prevents white contours
+        contour_cmap_clim = (0, contour_bma_clim[-1])
+        contours = ax.contour(contour_bma, cmap=contour_cmap, vmin=contour_cmap_clim[0], \
+                vmax=contour_cmap_clim[-1], **contour_prop)
+
+        #Add labels
+        ax.clabel(contours, inline=True, inline_spacing=0, fontsize=4, fmt='%i')
 
         #Update the cbar with contour locations
-        cbar.add_lines(contours)
-        cbar.set_ticks(contours.levels)
+        #cbar.add_lines(contours)
+        #cbar.set_ticks(contours.levels)
 
     #Plot shape overlay, moved code to pltlib
     if shp is not None:
@@ -336,19 +342,27 @@ def getparser():
     parser.add_argument('-cmap', default=None, choices=maps, help='set colormap type')
     #Check to make sure these are ordered correctly
     parser.add_argument('-clim', nargs=2, type=float, default=None, help='set colormap limits (min max)')
-    parser.add_argument('-clim_perc', nargs=2, type=float, default=(2.0, 98.0), help='set colormap percentile limits (min max)')
-    parser.add_argument('-coord', default=None, choices=['None', 'proj', 'latlon'], help='set coordinate label type')
-    parser.add_argument('-cint', type=float, default=None, help='set contour interval')
+    parser.add_argument('-clim_perc', nargs=2, type=float, default=(2.0, 98.0), \
+            help='set colormap percentile limits (min max)')
+    parser.add_argument('-coord', default=None, choices=['None', 'proj', 'latlon'], \
+            help='set coordinate label type')
+    parser.add_argument('-contour_fn', default=None, \
+            help='Filename of raster to use for contour. Default is input filename')
+    parser.add_argument('-contour_clim', nargs=2, type=float, default=None, help='set contour limits')
+    parser.add_argument('-contour_int', type=float, default=None, help='set contour interval')
     parser.add_argument('-label', type=str, default=None, help='colorbar label')
     parser.add_argument('-full', action='store_true', help='do not subsample for display') 
     #Eventually, allow for of filename specification
-    parser.add_argument('-of', default=None, choices=['pdf', 'ps', 'jpg', 'png', 'tif'], help='save output to specified file type') 
+    parser.add_argument('-of', default=None, choices=['pdf', 'ps', 'jpg', 'png', 'tif'], \
+            help='save output to specified file type') 
     #Note: should bind this to -of above
     parser.add_argument('-dpi', type=float, default=None, help='specify output dpi') 
-    parser.add_argument('-outsize', nargs=2, type=float, default=None, help='specify output dimensions in inches (w h)') 
+    parser.add_argument('-outsize', nargs=2, type=float, default=None, \
+            help='specify output dimensions in inches (w h)') 
     parser.add_argument('-overlay', default=None, help='specify basemap for overlay')
     parser.add_argument('-shp', default=None, help='specify shapefile for overlay')
-    parser.add_argument('-alpha', type=float, default=0.4, help='Overlay transparency (0 is transparent, 1 opaque)')
+    parser.add_argument('-alpha', type=float, default=0.4, \
+            help='Overlay transparency (0 is transparent, 1 opaque)')
     parser.add_argument('-link', action='store_true', help='share axes for all input images')
     parser.add_argument('-no_cbar', action='store_true', help='no colorbar')
     parser.add_argument('-ticks', action='store_true', help='display ticks')
