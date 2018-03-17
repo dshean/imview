@@ -194,29 +194,11 @@ def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
                     pX, pY = geolib.mapToPixel(np.array(mX), np.array(mY), gt)
                     ax.plot(pX, pY, color=color, **attr)
 
-#Added this here for convenience, needs further testing
-def plot_2dhist(ax, x, y, xlim=None, ylim=None, log=False, maxline=True, trendline=False):
-    from pygeotools.lib import malib
-    #Should compute number of bins automatically based on input values, xlim and ylim
-    bins = (100, 100)
-    common_mask = ~(malib.common_mask([x,y]))
-    x = x[common_mask]
-    y = y[common_mask]
-    if xlim is None:
-        #xlim = (x.min(), x.max())
-        xlim = malib.calcperc(x, (0.1, 99.9))
-    if ylim is None:
-        #ylim = (y.min(), y.max())
-        ylim = malib.calcperc(y, (0.1, 99.9))
-    xlim = np.array(xlim)
-    ylim = np.array(ylim)
-    H, xedges, yedges = np.histogram2d(x,y,range=[xlim,ylim],bins=bins)
-    H = np.rot90(H)
-    H = np.flipud(H)
-    #Mask any empty bins
-    Hmasked = np.ma.masked_where(H==0,H)
-    #Hmasked = H
+def plot_2dhist(ax, x, y, xlim=None, ylim=None, xint=None, yint=None, nbins=(128,128), \
+        log=False, maxline=True, trendline=False):
+    Hmasked, xedges, yedges = malib.get_2dhist(x, y, xlim, ylim, xint, yint, nbins) 
     H_clim = malib.calcperc(Hmasked, (2,98))
+    #Use logarithmic color bar
     if log:
         import matplotlib.colors as colors
         ax.pcolormesh(xedges,yedges,Hmasked,cmap='inferno',norm=colors.LogNorm(vmin=H_clim[0],vmax=H_clim[1]))
