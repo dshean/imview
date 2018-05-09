@@ -25,6 +25,10 @@ def hide_ticks(ax):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
+def hide_labels(ax):
+    ax.axes.xaxis.set_ticklabels([])
+    ax.axes.yaxis.set_ticklabels([])
+
 def best_scalebar_location(a, length_pad=0.2, height_pad=0.1):
     """
     Attempt to determine best corner for scalebar based on number of unmasked pixels
