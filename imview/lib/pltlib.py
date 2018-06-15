@@ -25,10 +25,6 @@ def hide_ticks(ax):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
-def hide_labels(ax):
-    ax.axes.xaxis.set_ticklabels([])
-    ax.axes.yaxis.set_ticklabels([])
-
 def best_scalebar_location(a, length_pad=0.2, height_pad=0.1):
     """
     Attempt to determine best corner for scalebar based on number of unmasked pixels
@@ -198,11 +194,42 @@ def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
                     pX, pY = geolib.mapToPixel(np.array(mX), np.array(mY), gt)
                     ax.plot(pX, pY, color=color, **attr)
 
-def plot_2dhist(ax, x, y, xlim=None, ylim=None, xint=None, yint=None, nbins=(128,128), \
-        log=False, maxline=True, trendline=False):
-    Hmasked, xedges, yedges = malib.get_2dhist(x, y, xlim, ylim, xint, yint, nbins) 
+#Added this here for convenience, needs further testing
+def plot_2dhist(ax, x, y, xlim=None, ylim=None, xint=None, yint=None, nbins=(128,128), log=False, maxline=True, trendline=False):
+    from pygeotools.lib import malib
+    #Should compute number of bins automatically based on input values, xlim and ylim
+    common_mask = ~(malib.common_mask([x,y]))
+    x = x[common_mask]
+    y = y[common_mask]
+    if xlim is None:
+        #xlim = (x.min(), x.max())
+        xlim = malib.calcperc(x, (0.1, 99.9))
+    if ylim is None:
+        #ylim = (y.min(), y.max())
+        ylim = malib.calcperc(y, (0.1, 99.9))
+    #Note, round to nearest meter here
+    #xlim = np.rint(np.array(xlim))
+    xlim = np.array(xlim)
+    ylim = np.array(ylim)
+    if xint is not None:
+        xedges = np.arange(xlim[0], xlim[1]+xint, xint)
+    else:
+        xedges = nbins[0]
+
+    if yint is not None:
+        yedges = np.arange(ylim[0], ylim[1]+yint, yint)
+    else:
+        yedges = nbins[1]
+
+    H, xedges, yedges = np.histogram2d(x,y,range=[xlim,ylim],bins=[xedges, yedges])
+    #H, xedges, yedges = np.histogram2d(x,y,range=[xlim,ylim],bins=nbins)
+    #H = np.rot90(H)
+    #H = np.flipud(H)
+    H = H.T
+    #Mask any empty bins
+    Hmasked = np.ma.masked_where(H==0,H)
+    #Hmasked = H
     H_clim = malib.calcperc(Hmasked, (2,98))
-    #Use logarithmic color bar
     if log:
         import matplotlib.colors as colors
         ax.pcolormesh(xedges,yedges,Hmasked,cmap='inferno',norm=colors.LogNorm(vmin=H_clim[0],vmax=H_clim[1]))
