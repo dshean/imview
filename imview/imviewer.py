@@ -89,7 +89,7 @@ def onclick(event):
                 #gdal (0,0) is upper left
                 mx, my = geolib.pixelToMap(xpx, ypx, ggt)
                 out = (xpx, ypx), (mx, my, gbma[ypx, xpx])
-            print out
+            print(out)
         except IndexError:
             pass
 
@@ -153,9 +153,9 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
                 clim = (bma.fill_value, clim[0])
             else:
                 clim = (clim[0], bma.fill_value)
-        print "Colorbar limits (%0.1f-%0.1f%%): %0.3f %0.3f" % (clim_perc[0], clim_perc[1], clim[0], clim[1])
+        print("Colorbar limits (%0.1f-%0.1f%%): %0.3f %0.3f" % (clim_perc[0], clim_perc[1], clim[0], clim[1]))
     else:
-        print "Colorbar limits: %0.3f %0.3f" % (clim[0], clim[1])
+        print("Colorbar limits: %0.3f %0.3f" % (clim[0], clim[1]))
 
     #Link all subplots for zoom/pan
     sharex = sharey = None
@@ -393,7 +393,7 @@ def main():
     args['bg'] = None
 
     if args['shp'] is not None:
-        print args['shp']
+        print(args['shp'])
 
     #Need to implement better extent handling for link and overlay
     #Can use warplib extent parsing
@@ -411,12 +411,12 @@ def main():
         extent = 'intersection'
         extent = geolib.ds_geom_union_extent(src_ds_list, t_srs=t_srs)
         #extent = geolib.ds_geom_intersection_extent(src_ds_list, t_srs=t_srs)
-        #print res, extent
+        #print(res, extent)
 
     for n,fn in enumerate(args['filelist']):
 
         if not iolib.fn_check(fn):
-            print 'Unable to open input file: %s' % fn
+            print('Unable to open input file: %s' % fn)
             continue
 
         #Note: this won't work if img1 has 1 band and img2 has 3 bands
@@ -434,7 +434,7 @@ def main():
             #Should automatically search for shaded relief with same base fn
             #bg_fn = os.path.splitext(fn)[0]+'_hs_az315.tif'
             #Clip/warp background dataset to match overlay dataset 
-            src_ds, bg_ds = warplib.memwarp_multi_fn([fn, args['overlay']], extent=extent, res='min')
+            src_ds, bg_ds = warplib.memwarp_multi_fn([fn, args['overlay']], extent=extent, res='max')
             #Want to load up the unique bg array for each input
             args['bg'] = get_bma(bg_ds, 1, args['full'])
         else:
@@ -448,8 +448,7 @@ def main():
         b = src_ds.GetRasterBand(1)
         dt = gdal.GetDataTypeName(b.DataType)
         #Eventually, check dt of each band
-        print 
-        print "%s (%i bands)" % (fn, nbands)
+        print("%s (%i bands)" % (fn, nbands))
         #Singleband raster
         if (nbands == 1):
             if args['cmap'] is None:
@@ -510,7 +509,7 @@ def main():
         ts = timelib.fn_getdatetime_list(fn) 
 
         if ts:
-            print "Timestamp list: ", ts
+            print("Timestamp list: ", ts)
 
         
         title = args['title']
@@ -549,14 +548,14 @@ def main():
             elif (args['outsize'] is not None) and (args['dpi'] is None):
                 args['dpi'] = np.min([np.max(np.array(bma.shape[::-1])/np.array(args['outsize'])), max_dpi])
                 
-            print
-            print "Saving output figure:"
-            print "Filename: ", outf
-            print "Size (in): ", args['outsize']
-            print "DPI (px/in): ", args['dpi']
-            print "Input dimensions (px): ", bma.shape[::-1]
-            print "Output dimensions (px): ", tuple(np.array(args['outsize'])*args['dpi'])
-            print
+            print()
+            print("Saving output figure:")
+            print("Filename: ", outf)
+            print("Size (in): ", args['outsize'])
+            print("DPI (px/in): ", args['dpi'])
+            print("Input dimensions (px): ", bma.shape[::-1])
+            print("Output dimensions (px): ", tuple(np.array(args['outsize'])*args['dpi']))
+            print()
 
             fig.set_size_inches(args['outsize'])
             #fig.set_size_inches(54.427, 71.87)

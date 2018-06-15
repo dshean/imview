@@ -136,7 +136,7 @@ def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
         #Note: this should be done with the matplotlib patch functionality
         #http://matplotlib.org/users/path_tutorial.html
         elif geom_type == 3:
-            print "Polygon support not yet implemented"
+            print("Polygon support not yet implemented")
             #ogr2ogr -nlt LINESTRING out.shp in.shp
             l, mX, mY = geolib.line2pts(geom)
             z = 0
@@ -185,7 +185,7 @@ def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
                         #import ipdb; ipdb.set_trace()
                         #pX, pY = geolib.mapToPixel(np.array(mX), np.array(mY), gt)
                         pX, pY = geolib.mapToPixel(mmX, mmY, gt)
-                        #print n, np.diff(pX).max(), np.diff(pY).max()
+                        print(n, np.diff(pX).max(), np.diff(pY).max())
                         #ax.plot(pX, pY, color='LimeGreen', **attr)
                         #ax.plot(pX, pY, color='LimeGreen', alpha=0.5, **attr)
                         #ax.plot(pX, pY, color='w', alpha=0.5, **attr)

@@ -1,3 +1,3 @@
 #! /usr/bin/env python
 
-from lib import *
+from .lib import *
