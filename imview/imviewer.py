@@ -234,7 +234,8 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     else:
         pltlib.hide_ticks(ax)
     #This forces the black line outlining the image subplot to snap to the actual image dimensions
-    ax.set_adjustable('box-forced')
+    #depreciated in 2.2
+    #ax.set_adjustable('box-forced')
 
     cbar = True 
     if cbar:
