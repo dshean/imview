@@ -76,7 +76,7 @@ def reset_colors():
     colors = itertools.cycle(color_list)
 
 def save_figure():
-    print "Not yet implemented"
+    print("Not yet implemented")
 
 #This creates a static legend for all point types
 #Could put constant error bars on points in legend, not on plot 
@@ -100,15 +100,15 @@ def create_legend(ax, source, loc='lower left'):
                 marker = 'o'
                 #marker = markers.next()
                 label = i
-            lines.append(plt.Line2D(range(1), range(1), linewidth=None, linestyle='', color='k', marker=marker, alpha=alpha, markersize=ms, markerfacecolor='k'))
+            lines.append(plt.Line2D(list(range(1)), list(range(1)), linewidth=None, linestyle='', color='k', marker=marker, alpha=alpha, markersize=ms, markerfacecolor='k'))
             labels.append(label)
         marker_key = plt.legend(lines, labels, ncol=2, numpoints=1, loc=loc, prop={'size':8})
         ax.add_artist(marker_key)
 
 def create_legend_interactive(ax):
     handles, labels = ax.get_legend_handles_labels()
-    by_label = OrderedDict(zip(labels, handles))
-    ax.legend(by_label.values(), by_label.keys(), numpoints=1, loc='lower left')
+    by_label = OrderedDict(list(zip(labels, handles)))
+    ax.legend(list(by_label.values()), list(by_label.keys()), numpoints=1, loc='lower left')
     legend = ax.get_legend()
     for h in legend.legendHandles:
         h.set_color('k')
@@ -128,40 +128,40 @@ def linregress(v):
     vm = d*slope + intercept
     r = v - vm
     #malib.print_stats(r)
-    print slope*365.25, intercept, r_value**2, std_err
+    print(slope*365.25, intercept, r_value**2, std_err)
     return vm, r, slope*365.25
 
 def sample_stack(ex, ey, geoid_offset=False, pad=3):
     if ex > m.shape[2]-1 or ey > m.shape[1]-1:
-        print "Input coordinates are outside stack extent:"
-        print ex, ey
-        print m.shape
+        print("Input coordinates are outside stack extent:")
+        print(ex, ey)
+        print(m.shape)
         v = None
     else:
-        print "Sampling with pad: %i" % pad
+        print("Sampling with pad: %i" % pad)
         if pad == 0:
             #Note: need to fix this - need integer indices, or interpolate
             v = m[:,ey,ex]
         else:
             window_x = np.around(np.clip([ex-pad, ex+pad+1], 0, m.shape[2]-1)).astype(int)
             window_y = np.around(np.clip([ey-pad, ey+pad+1], 0, m.shape[1]-1)).astype(int)
-            print window_x
-            print window_y
+            print(window_x)
+            print(window_y)
             v = m[:,window_y[0]:window_y[1],window_x[0]:window_x[1]].reshape(m.shape[0], np.ptp(window_x)*np.ptp(window_y))
             #v = v.mean(axis=1)
             v = np.ma.median(v, axis=1)
         if v.count() == 0:
-            print "No valid values"
+            print("No valid values")
         else:
             mx, my = geolib.pixelToMap(ex, ey, gt)
-            print ex, ey, mx, my
-            print "Count: %i" % v.count()
+            print(ex, ey, mx, my)
+            print("Count: %i" % v.count())
             #Hack to get elevations relative to geoid
             #Note: this can be added multiple times if clicked quickly
             if geoid_offset:
                 #geoid_offset = geolib.sps2geoid(mx, my, 0.0)[2]
                 geoid_offset = geolib.nps2geoid(mx, my, 0.0)[2]
-                print "Removing geoid offset: %0.1f" % geoid_offset
+                print("Removing geoid offset: %0.1f" % geoid_offset)
                 v += geoid_offset
         #Should filter here
         #RS1 has some values that are many 1000s of m/yr below neighbors
@@ -172,10 +172,10 @@ def sample_stack(ex, ey, geoid_offset=False, pad=3):
                 min_v = med - mad*4
                 f_idx = (v < min_v).filled(False)
                 if np.any(f_idx):
-                    print med, mad
-                    print "Outliers removed by absolute filter: (val < %0.1f)" % min_v
-                    print timelib.o2dt(d[f_idx])
-                    print v[f_idx]
+                    print(med, mad)
+                    print("Outliers removed by absolute filter: (val < %0.1f)" % min_v)
+                    print(timelib.o2dt(d[f_idx]))
+                    print(v[f_idx])
                     v[f_idx] = np.ma.masked
             if True:
                 v_idx = (~np.ma.getmaskarray(v)).nonzero()[0]
@@ -193,9 +193,9 @@ def sample_stack(ex, ey, geoid_offset=False, pad=3):
                 f_idx = np.zeros_like(v.data).astype(bool)
                 f_idx[v_idx] = (f_diff > diff_thresh)
                 if np.any(f_idx):
-                    print "Outliers removed by rolling median filter: (val < %0.1f)" % diff_thresh
-                    print timelib.o2dt(d[f_idx])
-                    print v[f_idx]
+                    print("Outliers removed by rolling median filter: (val < %0.1f)" % diff_thresh)
+                    print(timelib.o2dt(d[f_idx]))
+                    print(v[f_idx])
                     v[f_idx] = np.ma.masked
     return v
 
@@ -307,9 +307,9 @@ def plot_point_map(mx, my):
 
 def plot_point(ex, ey):
     if ex > m.shape[2]-1 or ey > m.shape[1]-1:
-        print "Input coordinates are outside stack extent:"
-        print ex, ey
-        print m.shape
+        print("Input coordinates are outside stack extent:")
+        print(ex, ey)
+        print(m.shape)
     else:
         v = sample_stack(ex, ey, geoid_offset=geoid_offset, pad=pad)
         v_idx = (~np.ma.getmaskarray(v)).nonzero()[0]
@@ -387,12 +387,12 @@ def plot_point(ex, ey):
                 np.savetxt(out_fn, np.array([d_valid, v_valid, v_error]).T, fmt='%0.6f, %0.1f, %0.1f', delimiter=',')
 
 def clear_figure():
-    print "Clearing figures"
+    print("Clearing figures")
     for i in (1,2,3):
         plt.figure(i)
         ax = plt.gca()
         ylabel = ax.get_ylabel()
-        print ylabel
+        print(ylabel)
         ax.cla()
         fmt_ax(ax, ylabel)
         plt.draw()
@@ -449,7 +449,7 @@ def main():
 
     stack_fn = sys.argv[1]
 
-    print "Loading stack"
+    print("Loading stack")
     s = malib.DEMStack(stack_fn=stack_fn, stats=True, trend=True, save=False)
     global d
     d = s.date_list_o
