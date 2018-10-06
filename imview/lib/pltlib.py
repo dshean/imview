@@ -44,19 +44,25 @@ def add_scalebar(ax, res, location='lower right'):
     sb = ScaleBar(res, location=location, border_pad=0.5)
     ax.add_artist(sb)
 
-def add_colorbar(ax, im, loc='center left', label=None):
+#This is old
+def add_colorbar(ax, mappable, loc='center left', label=None):
     from matplotlib_colorbar.colorbar import Colorbar
-    cbar = Colorbar(im, location=loc, border_pad=0.5)
+    cbar = Colorbar(mappable, location=loc, border_pad=0.5)
     if label is not None:
         cbar.set_label(label)
     cbar.set_alpha(1)
     #cbar.draw_all()
     ax.add_artist(cbar)
- 
-#def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}):
-def add_cbar(ax, im, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}, fontsize=10):
+
+#This should be used for subplots 
+#def add_cbar(ax, mappable, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}, fontsize=10):
+def add_cbar(ax, mappable, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical'}, fontsize=10):
     #cbar_kwargs['format'] = '%i'
-    cbar = plt.colorbar(im, ax=ax, **cbar_kwargs) 
+    fig = ax.figure
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cbar = fig.colorbar(mappable, ax=ax, cax=cax, **cbar_kwargs) 
     if label is not None:
         cbar.set_label(label, size=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
