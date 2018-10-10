@@ -23,11 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredOffsetbox
 from osgeo import gdal, ogr, osr
 
-from pygeotools.lib import iolib
-from pygeotools.lib import malib
-from pygeotools.lib import geolib
-from pygeotools.lib import timelib
-from pygeotools.lib import warplib
+from pygeotools.lib import iolib, malib, geolib, timelib, warplib
 
 from imview.lib import pltlib
 
@@ -247,6 +243,13 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         #cbar_kwargs['orientation'] = 'horizontal'
         #cbar_kwargs['shrink'] = 0.8
 
+        if bma.min() >= clim[0] and bma.max() <= clim[1]:
+            cbar_kwargs['extend'] = 'neither'
+        elif bma.min() >= clim[0] and bma.max() > clim[1]:
+            cbar_kwargs['extend'] = 'max'
+        elif bma.min() < clim[0] and bma.max() <= clim[1]:
+            cbar_kwargs['extend'] = 'min'
+            
         cbar = pltlib.add_cbar(ax, imgplot, label=label, cbar_kwargs=cbar_kwargs)
    
     #Plot contours every contour_int interval and update colorbar appropriately
