@@ -58,16 +58,16 @@ global colors
 def onclick(event):
     b = event.button
     #Left button picks points
-    if b is 1:
+    if b == 1:
         ex = event.xdata
         ey = event.ydata
         #Need to make sure we're in valid axes
         if ex is not None and ey is not None:
             plot_point(ex, ey)
-    elif b is 2:
+    elif b == 2:
         save_figure()
     #Right button clears figures
-    elif b is 3:
+    elif b == 3:
         clear_figure()
 
 def reset_colors():
