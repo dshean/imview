@@ -396,6 +396,8 @@ def clear_figure():
         ax.cla()
         fmt_ax(ax, ylabel)
         plt.draw()
+    plt.figure(3)
+    plt.axhline(0, color='k', linestyle='-', linewidth=0.6)
     plt.figure(0)
     for pt_list in ax_pt_list:
         for i in pt_list:
