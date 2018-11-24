@@ -27,23 +27,6 @@ from pygeotools.lib import iolib, malib, geolib, timelib, warplib
 
 from imview.lib import pltlib
 
-#These are matplotlib 2.0 colormaps
-#To use:
-#cmap=cmaps.inferno
-#cmap=cmaps.viridis
-import imview.lib.colormaps as cmaps
-plt.register_cmap(name='inferno', cmap=cmaps.inferno)
-plt.register_cmap(name='inferno_r', cmap=cmaps.inferno_r)
-plt.register_cmap(name='magma', cmap=cmaps.magma)
-plt.register_cmap(name='plasma', cmap=cmaps.plasma)
-plt.register_cmap(name='viridis', cmap=cmaps.viridis)
-
-from imview.lib import gmtColormap
-cpt_rainbow = gmtColormap.get_rainbow()
-plt.register_cmap(cmap=cpt_rainbow)
-cpt_rainbow_r = gmtColormap.get_rainbow(rev=True) 
-plt.register_cmap(cmap=cpt_rainbow_r)
-
 #Global variable holding array under cursor
 gbma = None
 
@@ -134,24 +117,13 @@ def ndanimate(a):
     plt.show()
     return an
 
-
-#Note: can probably handle the cmap and clim in imshow_kwargs
-#def bma_fig(bma, cmap='gray', clim=malib.calcperc(bma,perc)):
-#def bma_fig(fig, bma, cmap='gist_rainbow_r', clim=None, bg=None, n_subplt=1, subplt=1, label=None, contour_int=None, **imshow_kwargs):
-def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, bg_perc=(2,98), n_subplt=1, subplt=1, label=None, title=None, contour_int=None, contour_fn=None, alpha=0.5, ticks=False, scalebar=None, ds=None, shp=None, imshow_kwargs={'interpolation':'nearest'}, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}, **kwargs):
+def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, bg_perc=(2,98), n_subplt=1, subplt=1, label=None, title=None, contour_int=None, contour_fn=None, alpha=0.5, ticks=False, scalebar=None, ds=None, shp=None, imshow_kwargs={'interpolation':'nearest'}, cbar_kwargs={'orientation':'vertical'}, **kwargs):
     #We don't use the kwargs, just there to save parsing in main
     
     if clim is None:
-        clim = malib.calcperc(bma, clim_perc)
-        #Deal with masked cases
-        if clim[0] == clim[1]:
-            if clim[0] > bma.fill_value:
-                clim = (bma.fill_value, clim[0])
-            else:
-                clim = (clim[0], bma.fill_value)
-        print("Colorbar limits (%0.1f-%0.1f%%): %0.3f %0.3f" % (clim_perc[0], clim_perc[1], clim[0], clim[1]))
-    else:
-        print("Colorbar limits: %0.3f %0.3f" % (clim[0], clim[1]))
+        clim = pltlib.get_clim(bma)
+
+    print("Colorbar limits: %0.3f %0.3f" % (clim[0], clim[1]))
 
     #Link all subplots for zoom/pan
     sharex = sharey = None
@@ -170,19 +142,10 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     #ax.patch.set_facecolor('black')
     ax.patch.set_facecolor('white')
 
+    #Set appropriate nodata value color
     cmap_name = cmap
-    cmap = plt.get_cmap(cmap_name)
-    if 'inferno' in cmap_name:
-        #Use a gray background
-        cmap.set_bad('0.5', alpha=1)
-        #This may be better 
-        #cmap.set_bad('0.1', alpha=1)
-        #cmap.set_bad('k', alpha=1)
-    else:
-        #This sets the nodata background to opaque black
-        cmap.set_bad('k', alpha=1)
-        #cmap.set_bad('w', alpha=1)
-
+    cmap = pltlib.cmap_setndv(cmap_name)
+    
     #ax.set_title("Band %i" % subplt, fontsize=10)
     if title is not None:
         ax.set_title(title)
@@ -191,23 +154,17 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     if bg is not None:
         #Note, alpha=1 is opaque, 0 completely transparent
         #alpha = 0.6
-        #bg_perc = (0.05, 99.95)
-        #bg_perc = (1, 99)
-        #bg_perc = (2, 98)
-        #bg_perc = (3,97)
         bg_perc = (4,96)
         bg_alpha = 1.0
-        #bg_alpha = 0.5 
-        bg_clim = malib.calcperc(bg, bg_perc)
-        #bg_clim = (115, 255)
+        #bg_clim = malib.calcperc(bg, bg_perc)
         bg_clim = (1, 255)
         bg_cmap_name = 'gray'
-        bg_cmap = plt.get_cmap(bg_cmap_name)
-        if 'inferno' in cmap_name:
-            bg_cmap.set_bad('0.5', alpha=1)
-            #bg_cmap.set_bad('k', alpha=1)
-        else:
-            bg_cmap.set_bad('k', alpha=1)
+        bg_cmap = pltlib.cmap_setndv(bg_cmap_name, cmap_name)
+        #bg_cmap = plt.get_cmap(bg_cmap_name)
+        #if 'inferno' in cmap_name:
+        #    bg_cmap.set_bad('0.5', alpha=1)
+        #else:
+        #    bg_cmap.set_bad('k', alpha=1)
         #Set the overlay bad values to completely transparent, otherwise darkens the bg
         cmap.set_bad(alpha=0)
         bgplot = ax.imshow(bg, cmap=bg_cmap, clim=bg_clim, alpha=bg_alpha)
@@ -235,21 +192,15 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
 
     cbar = True 
     if cbar:
-        #Had to turn off the ax=ax for overlay to work
-        #cbar = fig.colorbar(imgplot, ax=ax, extend='both', shrink=0.5) 
         #Should set the format based on dtype of input data 
         #cbar_kwargs['format'] = '%i'
         #cbar_kwargs['format'] = '%0.1f'
         #cbar_kwargs['orientation'] = 'horizontal'
-        #cbar_kwargs['shrink'] = 0.8
 
-        if bma.min() >= clim[0] and bma.max() <= clim[1]:
-            cbar_kwargs['extend'] = 'neither'
-        elif bma.min() >= clim[0] and bma.max() > clim[1]:
-            cbar_kwargs['extend'] = 'max'
-        elif bma.min() < clim[0] and bma.max() <= clim[1]:
-            cbar_kwargs['extend'] = 'min'
-            
+        #Determine whether we need to add extend triangles to colorbar
+        cbar_kwargs['extend'] = pltlib.get_cbar_extend(bma, clim)
+
+        #Add the colorbar to the axes
         cbar = pltlib.add_cbar(ax, imgplot, label=label, cbar_kwargs=cbar_kwargs)
    
     #Plot contours every contour_int interval and update colorbar appropriately
@@ -302,9 +253,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         if not ticks:
             pltlib.hide_ticks(ax)
 
-    #imgplot.set_cmap(cmap)
-    #imgplot.set_clim(clim)
-  
+    #Set up interactive display
     global gbma
     gbma = bma
     global ggt
@@ -333,13 +282,10 @@ def getparser():
     maps=[m for m in plt.cm.datad]
     #maps=[m for m in plt.cm.datad if not m.endswith("_r")]
     maps.sort()
-    maps.append('cpt_rainbow')
-    maps.append('cpt_rainbow_r')
-    maps.append('inferno')
-    maps.append('inferno_r')
-    maps.append('magma')
-    maps.append('plasma')
-    maps.append('viridis')
+    #This should be registered with pltlib import
+    if not 'cpt_rainbow' in maps:
+        maps.append('cpt_rainbow')
+        maps.append('cpt_rainbow_r')
 
     #Parse input arguments
     parser = argparse.ArgumentParser(description='A lightweight matplotlib image viewer')
@@ -384,20 +330,7 @@ def main():
     if args['of']:
         args['full'] = True
 
-    #imshow has many interpolation types:
-    #'none', 'nearest', 'bilinear', 'bicubic', 'spline16', 'spline36', 'hanning', 'hamming', 
-    #'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos'
-    #{'interpolation':'bicubic', 'aspect':'auto'}
-
-    #Note: matpltolib v2.0+ interpolates across masked values, disable interpolation for now
-    #args['imshow_kwargs']={'interpolation':'bicubic'}
-    args['imshow_kwargs']={'interpolation':'none'}
-
-    #Set this as the background numpy array
-    args['bg'] = None
-
-    if args['shp'] is not None:
-        print(args['shp'])
+    args['imshow_kwargs'] = pltlib.imshow_kwargs 
 
     #Need to implement better extent handling for link and overlay
     #Can use warplib extent parsing
@@ -418,7 +351,6 @@ def main():
         #print(res, extent)
 
     for n,fn in enumerate(args['filelist']):
-
         if not iolib.fn_check(fn):
             print('Unable to open input file: %s' % fn)
             continue
@@ -445,8 +377,6 @@ def main():
             src_ds = gdal.Open(fn, gdal.GA_ReadOnly)
             if args['link']:
                 src_ds = warplib.memwarp_multi([src_ds,], res=res, extent=extent, t_srs=t_srs)[0]
-
-        cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}
 
         nbands = src_ds.RasterCount
         b = src_ds.GetRasterBand(1)
@@ -482,7 +412,7 @@ def main():
                     cbar_kwargs['extend'] = 'neither'
                     args['cmap'] = 'gray'
                 """
-            args['cbar_kwargs'] = cbar_kwargs
+            args['cbar_kwargs'] = pltlib.cbar_kwargs
             bma = get_bma(src_ds, 1, args['full'])   
             #Note n+1 here ensures we're assigning subplot correctly here (n is 0-relative, subplot is 1)
             bma_fig(fig, bma, n_subplt=n_ax, subplt=n+1, ds=src_ds, **args)
@@ -564,7 +494,8 @@ def main():
             fig.set_size_inches(args['outsize'])
             #fig.set_size_inches(54.427, 71.87)
             #fig.set_size_inches(40, 87)
-            fig.savefig(outf, dpi=args['dpi'], bbox_inches='tight', pad_inches=0, facecolor=fig.get_facecolor(), edgecolor='none')
+            #fig.savefig(outf, dpi=args['dpi'], bbox_inches='tight', pad_inches=0, facecolor=fig.get_facecolor(), edgecolor='none')
+            fig.savefig(outf, dpi=args['dpi'], facecolor=fig.get_facecolor(), edgecolor='none')
     #Show the plot - want to show all at once
     if not args['of']: 
         plt.show()

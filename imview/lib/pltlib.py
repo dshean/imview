@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
+from pygeotools.lib import malib, geolib
+
 from imview.lib import gmtColormap
 cpt_rainbow = gmtColormap.get_rainbow()
 plt.register_cmap(cmap=cpt_rainbow)
@@ -20,6 +22,114 @@ plt.register_cmap(cmap=cpt_rainbow_r)
 #import itertools
 #color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 #colors = itertools.cycle(color_list)
+
+#Global imshow keyword arguments
+#Note: matpltolib v2.0+ interpolates across masked values, disable interpolation for now
+imshow_kwargs = {'interpolation':'none'}
+
+#Global cbar keyword arguments
+#cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}
+#cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}
+cbar_kwargs={'orientation':'vertical'}
+
+def iv_fn(fn, full=False, kwargs=None):
+    from pygeotools.lib import iolib
+    ds = iolib.fn_getds(fn)
+    if full:
+        a = iolib.ds_getma(ds)
+    else:
+        a = iolib.ds_getma_sub(ds)
+    return iv(a, **kwargs)
+
+def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, title=None, \
+        ds=None, hillshade=False, scalebar=True):
+    """
+    Quick image viewer with standardized display settings
+    """
+    if ax is None:
+        f,ax = plt.subplots()
+    ax.set_aspect('equal')
+    if clim is None:
+        clim = get_clim(a, clim_perc)
+    cm = cmap_setndv(cmap, cmap)
+    alpha=1.0
+    if ds is not None:
+        if hillshade:
+            hs = geolib.gdaldem_mem_ds(ds, processing='hillshade', computeEdges=True, returnma=True)
+            b_cm = cmap_setndv('gray', cmap)
+            #Set the overlay bad values to completely transparent, otherwise darkens the bg
+            cm.set_bad(alpha=0)
+            bg_clim_perc = (2,98)
+            bg_clim = get_clim(hs, bg_clim_perc)
+            #bg_clim = (1, 255)
+            bgplot = ax.imshow(hs, cmap=b_cm, clim=bg_clim)
+            alpha = 0.5
+        if scalebar:
+            #Get resolution at center of dataset
+            ccoord = geolib.get_center(ds)
+            c_srs = geolib.localortho(*ccoord)
+            res = geolib.get_res(ds, c_srs)[0]
+            sb_loc = best_scalebar_location(a)
+            add_scalebar(ax, res, sb_loc)
+    imgplot = ax.imshow(a, cmap=cm, clim=clim, alpha=alpha, **imshow_kwargs)
+    cbar_kwargs['extend'] = get_cbar_extend(a, clim=clim)
+    cbar_kwargs['format'] = get_cbar_format(a)
+    cbar = add_cbar(ax, imgplot, label=label)
+    hide_ticks(ax)
+    if title is not None:
+        ax.set_title(title)
+    plt.tight_layout()
+    return ax
+
+def get_clim(a, clim_perc=(2,98)):
+    """
+    Computer percentile stretch for input array
+    """
+    #print("Colorbar limits (%0.1f-%0.1f%%)" % clim_perc)
+    clim = malib.calcperc(a, clim_perc)
+    if clim[0] == clim[1]:
+        if clim[0] > a.fill_value:
+            clim = (a.fill_value, clim[0])
+        else:
+            clim = (clim[0], a.fill_value)
+    return clim
+
+def get_cbar_extend(a, clim=None):
+    """
+    Determine whether we need to add triangles to ends of colorbar
+    """
+    if clim is None:
+        clim = get_clim(a)
+    extend = 'both'
+    if a.min() >= clim[0] and a.max() <= clim[1]:
+        extend = 'neither'
+    elif a.min() >= clim[0] and a.max() > clim[1]:
+        extend = 'max'
+    elif a.min() < clim[0] and a.max() <= clim[1]:
+        extend = 'min'
+    return extend
+
+def get_cbar_format(a):
+    format = None
+    #Check dtype
+    #format = '%i'
+    return format
+
+def cmap_setndv(cmap1, cmap2=None):
+    """
+    Set default nodata mapping for colorbar
+    """
+    #Get matplotlib colormap objet
+    cmap = plt.get_cmap(cmap1)
+    if cmap2 is None: 
+        cmap2 = cmap1
+    if 'inferno' in cmap2:
+        #Set nodata to opaque gray
+        cmap.set_bad('0.5', alpha=1)
+    else:
+        #Set nodata to opaque black
+        cmap.set_bad('k', alpha=1)
+    return cmap
 
 def hide_ticks(ax):
     ax.get_xaxis().set_visible(False)
@@ -39,10 +149,36 @@ def best_scalebar_location(a, length_pad=0.2, height_pad=0.1):
     loc = min(d, key=d.get)
     return loc
 
-def add_scalebar(ax, res, location='lower right'):
+def add_scalebar(ax, res, arr=None, location='lower right'):
     from matplotlib_scalebar.scalebar import ScaleBar
+    if arr is not None:
+        location=best_scalebar_location(arr)
     sb = ScaleBar(res, location=location, border_pad=0.5)
     ax.add_artist(sb)
+
+def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwargs, fontsize=10):
+    """
+    Add colorbar to axes for previously plotted mappable (output from imshow)
+    
+    Note that there are still issues with some backends like %matplotlib inline
+    """
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    #from mpl_toolkits.axes_grid1.colorbar import colorbar
+    fig = ax.figure
+    divider = make_axes_locatable(ax)
+    #cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax = divider.append_axes("right", size="5%", pad="2%")
+    if arr is not None and clim is not None:
+        cbar_kwargs['extend'] = get_cbar_extend(arr, clim=clim)
+    cbar = fig.colorbar(mappable, cax=cax, **cbar_kwargs) 
+    if label is not None:
+        cbar.set_label(label, size=fontsize)
+    cbar.ax.tick_params(labelsize=fontsize)
+    #Set colorbar to be opaque, even if image is transparent
+    cbar.set_alpha(1)
+    #Need this to update after alpha change
+    cbar.draw_all()
+    return cbar
 
 #This is old
 def add_colorbar(ax, mappable, loc='center left', label=None):
@@ -51,25 +187,8 @@ def add_colorbar(ax, mappable, loc='center left', label=None):
     if label is not None:
         cbar.set_label(label)
     cbar.set_alpha(1)
-    #cbar.draw_all()
-    ax.add_artist(cbar)
-
-#This should be used for subplots 
-#def add_cbar(ax, mappable, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}, fontsize=10):
-def add_cbar(ax, mappable, label=None, cbar_kwargs={'extend':'both', 'orientation':'vertical'}, fontsize=10):
-    #cbar_kwargs['format'] = '%i'
-    fig = ax.figure
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
-    cbar = fig.colorbar(mappable, ax=ax, cax=cax, **cbar_kwargs) 
-    if label is not None:
-        cbar.set_label(label, size=fontsize)
-    cbar.ax.tick_params(labelsize=fontsize)
-    #Set colorbar to be opaque, even if image is transparent
-    cbar.set_alpha(1)
     cbar.draw_all()
-    return cbar
+    ax.add_artist(cbar)
 
 def minorticks_on(ax, x=True, y=True):
     if x:
@@ -202,7 +321,6 @@ def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
 
 #Added this here for convenience, needs further testing
 def plot_2dhist(ax, x, y, xlim=None, ylim=None, xint=None, yint=None, nbins=(128,128), log=False, maxline=True, trendline=False):
-    from pygeotools.lib import malib
     #Should compute number of bins automatically based on input values, xlim and ylim
     common_mask = ~(malib.common_mask([x,y]))
     x = x[common_mask]

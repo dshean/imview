@@ -1,3 +1,3 @@
 #! /usr/bin/env python
 
-__all__=['pltlib','colormaps','gmtColormap']
+__all__=['pltlib','gmtColormap']
