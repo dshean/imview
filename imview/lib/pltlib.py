@@ -70,7 +70,7 @@ def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, 
             c_srs = geolib.localortho(*ccoord)
             res = geolib.get_res(ds, c_srs)[0]
             sb_loc = best_scalebar_location(a)
-            add_scalebar(ax, res, sb_loc)
+            add_scalebar(ax, res, location=sb_loc)
     imgplot = ax.imshow(a, cmap=cm, clim=clim, alpha=alpha, **imshow_kwargs)
     cbar_kwargs['extend'] = get_cbar_extend(a, clim=clim)
     cbar_kwargs['format'] = get_cbar_format(a)
@@ -149,7 +149,7 @@ def best_scalebar_location(a, length_pad=0.2, height_pad=0.1):
     loc = min(d, key=d.get)
     return loc
 
-def add_scalebar(ax, res, arr=None, location='lower right'):
+def add_scalebar(ax, res, location='lower right', arr=None):
     from matplotlib_scalebar.scalebar import ScaleBar
     if arr is not None:
         location=best_scalebar_location(arr)
