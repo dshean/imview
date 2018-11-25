@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from pygeotools.lib import malib, geolib
+from pygeotools.lib import malib, geolib, iolib
 
 from imview.lib import gmtColormap
 cpt_rainbow = gmtColormap.get_rainbow()
@@ -32,9 +32,11 @@ imshow_kwargs = {'interpolation':'none'}
 #cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}
 cbar_kwargs={'orientation':'vertical'}
 
-def iv_fn(fn, full=False, kwargs=None):
-    from pygeotools.lib import iolib
+def iv_fn(fn, full=False, **kwargs):
     ds = iolib.fn_getds(fn)
+    return iv_ds(ds, full=full, **kwargs)
+
+def iv_ds(ds, full=False, **kwargs):
     if full:
         a = iolib.ds_getma(ds)
     else:
