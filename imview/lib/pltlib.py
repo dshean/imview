@@ -44,7 +44,7 @@ def iv_ds(ds, full=False, **kwargs):
     return iv(a, **kwargs)
 
 def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, title=None, \
-        ds=None, hillshade=False, scalebar=True):
+        ds=None, res=None, hillshade=False, scalebar=True):
     """
     Quick image viewer with standardized display settings
     """
@@ -55,8 +55,8 @@ def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, 
         clim = get_clim(a, clim_perc)
     cm = cmap_setndv(cmap, cmap)
     alpha=1.0
-    if ds is not None:
-        if hillshade:
+    if hillshade:
+        if ds is not None:
             hs = geolib.gdaldem_mem_ds(ds, processing='hillshade', computeEdges=True, returnma=True)
             b_cm = cmap_setndv('gray', cmap)
             #Set the overlay bad values to completely transparent, otherwise darkens the bg
@@ -66,11 +66,13 @@ def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, 
             #bg_clim = (1, 255)
             bgplot = ax.imshow(hs, cmap=b_cm, clim=bg_clim)
             alpha = 0.5
-        if scalebar:
+    if scalebar:
+        if ds is not None:
             #Get resolution at center of dataset
             ccoord = geolib.get_center(ds)
             c_srs = geolib.localortho(*ccoord)
             res = geolib.get_res(ds, c_srs)[0]
+        if res is not None:
             sb_loc = best_scalebar_location(a)
             add_scalebar(ax, res, location=sb_loc)
     imgplot = ax.imshow(a, cmap=cm, clim=clim, alpha=alpha, **imshow_kwargs)
@@ -141,6 +143,7 @@ def best_scalebar_location(a, length_pad=0.2, height_pad=0.1):
     """
     Attempt to determine best corner for scalebar based on number of unmasked pixels
     """
+    a = malib.checkma(a)
     length = int(a.shape[1]*length_pad)
     height = int(a.shape[0]*height_pad)
     d = {}
