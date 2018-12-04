@@ -57,7 +57,7 @@ def main():
     cmap = args.cmap
 
     fn = args.fn
-    print fn
+    print(fn)
     ds = gdal.Open(fn) 
     b = ds.GetRasterBand(1)
     ndv = iolib.get_ndv_b(b)
