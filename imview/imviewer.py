@@ -282,10 +282,6 @@ def getparser():
     maps=[m for m in plt.cm.datad]
     #maps=[m for m in plt.cm.datad if not m.endswith("_r")]
     maps.sort()
-    #This should be registered with pltlib import
-    if not 'cpt_rainbow' in maps:
-        maps.append('cpt_rainbow')
-        maps.append('cpt_rainbow_r')
 
     #Parse input arguments
     parser = argparse.ArgumentParser(description='A lightweight matplotlib image viewer')
