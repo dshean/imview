@@ -32,16 +32,21 @@ imshow_kwargs = {'interpolation':'none'}
 #cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}
 cbar_kwargs={'orientation':'vertical'}
 
-def iv_fn(fn, full=False, **kwargs):
+def iv_fn(fn, full=False, return_ma=False, **kwargs):
     ds = iolib.fn_getds(fn)
-    return iv_ds(ds, full=full, **kwargs)
+    return iv_ds(ds, full=full, return_ma=return_ma, **kwargs)
 
-def iv_ds(ds, full=False, **kwargs):
+def iv_ds(ds, full=False, return_ma=False, **kwargs):
     if full:
         a = iolib.ds_getma(ds)
     else:
-        a = iolib.ds_getma_sub(ds)
-    return iv(a, **kwargs)
+        a, ds = iolib.ds_getma_sub(ds, return_ds=True)
+    ax = iv(a, ds=ds, **kwargs)
+    if return_ma:
+        out = (ax, a)
+    else:
+        out = ax
+    return out 
 
 def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, title=None, \
         ds=None, res=None, hillshade=False, scalebar=True):
@@ -49,6 +54,7 @@ def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, 
     Quick image viewer with standardized display settings
     """
     if ax is None:
+        #ax = plt.subplot()
         f,ax = plt.subplots()
     ax.set_aspect('equal')
     if clim is None:
@@ -69,7 +75,8 @@ def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, 
     if scalebar:
         if ds is not None:
             #Get resolution at center of dataset
-            ccoord = geolib.get_center(ds)
+            ccoord = geolib.get_center(ds, t_srs=geolib.wgs_srs)
+            #Compute resolution in local cartesian coordinates at center
             c_srs = geolib.localortho(*ccoord)
             res = geolib.get_res(ds, c_srs)[0]
         if res is not None:
@@ -83,7 +90,7 @@ def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, 
     if title is not None:
         ax.set_title(title)
     plt.tight_layout()
-    return ax
+    return ax 
 
 def get_clim(a, clim_perc=(2,98)):
     """
@@ -312,7 +319,6 @@ def shp_overlay(ax, ds, shp_fn, gt=None, color='darkgreen'):
                         mmX = mX[a:b+1]
                         mmY = mY[a:b+1]
                         a = b+1
-                        #import ipdb; ipdb.set_trace()
                         #pX, pY = geolib.mapToPixel(np.array(mX), np.array(mY), gt)
                         pX, pY = geolib.mapToPixel(mmX, mmY, gt)
                         print(n, np.diff(pX).max(), np.diff(pY).max())
