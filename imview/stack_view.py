@@ -22,11 +22,6 @@ from pygeotools.lib import geolib
 from pygeotools.lib import filtlib 
 
 from imview.lib import pltlib
-import imview.lib.colormaps as cmaps
-from imview.lib import gmtColormap
-cpt_rainbow = gmtColormap.get_rainbow()
-cmap = cpt_rainbow
-#cmap = plt.get_cmap('gist_rainbow_r')
 
 #Reorganized to use main, so now need global variables for interactive onclick, sampling and plotting functions 
 #There is definitely a cleaner way to organize this functionality
@@ -591,10 +586,10 @@ def main():
     ax0 = fig.add_subplot(221)
     if hs is not None:
         ax0.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
-    im0 = ax0.imshow(val, cmap=cpt_rainbow, clim=val_clim, alpha=alpha, **imshow_kwargs)
+    im0 = ax0.imshow(val, cmap='cpt_rainbow', clim=val_clim, alpha=alpha, **imshow_kwargs)
     #This was used for Stanton et al figure
     #val_clim = (0, 50)
-    #im0 = ax0.imshow(val, cmap=cmaps.inferno, clim=val_clim, alpha=alpha, **imshow_kwargs)
+    #im0 = ax0.imshow(val, cmap='inferno', clim=val_clim, alpha=alpha, **imshow_kwargs)
     ax0.set_adjustable('box-forced')
     pltlib.hide_ticks(ax0)
     pltlib.add_cbar(ax0, im0, ylabel)
@@ -604,7 +599,7 @@ def main():
     ax1 = fig.add_subplot(222, sharex=ax0, sharey=ax0)
     if hs is not None:
         ax1.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
-    im1 = ax1.imshow(count, cmap=cmaps.inferno, clim=count_clim, alpha=alpha, **imshow_kwargs)
+    im1 = ax1.imshow(count, cmap='inferno', clim=count_clim, alpha=alpha, **imshow_kwargs)
     ax1.set_adjustable('box-forced')
     pltlib.hide_ticks(ax1)
     pltlib.add_cbar(ax1, im1, 'Count')
@@ -631,8 +626,8 @@ def main():
     ax3 = fig.add_subplot(224, sharex=ax0, sharey=ax0)
     if hs is not None:
         ax3.imshow(hs, cmap='gray', clim=hs_clim, **imshow_kwargs)
-    #im3 = ax3.imshow(detrended_std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
-    im3 = ax3.imshow(std, cmap=cpt_rainbow, clim=dstd_clim, alpha=alpha, **imshow_kwargs)
+    #im3 = ax3.imshow(detrended_std, cmap='cpt_rainbow', clim=dstd_clim, alpha=alpha, **imshow_kwargs)
+    im3 = ax3.imshow(std, cmap='cpt_rainbow', clim=dstd_clim, alpha=alpha, **imshow_kwargs)
     ax3.set_adjustable('box-forced')
     pltlib.hide_ticks(ax3)
     #pltlib.add_cbar(ax3, im3, 'Detrended Std (m)')
