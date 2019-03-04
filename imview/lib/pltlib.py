@@ -146,6 +146,12 @@ def hide_ticks(ax):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
+def hide_frame(ax):
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
 def best_scalebar_location(a, length_pad=0.2, height_pad=0.1):
     """
     Attempt to determine best corner for scalebar based on number of unmasked pixels
@@ -192,6 +198,7 @@ def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwa
     cbar.draw_all()
     return cbar
 
+"""
 #This is old
 def add_colorbar(ax, mappable, loc='center left', label=None):
     from matplotlib_colorbar.colorbar import Colorbar
@@ -201,6 +208,7 @@ def add_colorbar(ax, mappable, loc='center left', label=None):
     cbar.set_alpha(1)
     cbar.draw_all()
     ax.add_artist(cbar)
+"""
 
 def minorticks_on(ax, x=True, y=True):
     if x:
