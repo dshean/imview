@@ -285,7 +285,8 @@ def getparser():
 
     #Parse input arguments
     parser = argparse.ArgumentParser(description='A lightweight matplotlib image viewer')
-    parser.add_argument('-cmap', default=None, choices=maps, help='set colormap type')
+    #parser.add_argument('-cmap', default=None, choices=maps, help='set colormap type')
+    parser.add_argument('-cmap', default=None, help='set colormap name (see https://matplotlib.org/examples/color/colormaps_reference.html)')
     #Check to make sure these are ordered correctly
     parser.add_argument('-clim', nargs=2, type=float, default=None, help='set colormap limits (min max)')
     parser.add_argument('-clim_perc', nargs=2, type=float, default=(2.0, 98.0), \
@@ -307,13 +308,14 @@ def getparser():
             help='specify output dimensions in inches (w h)') 
     parser.add_argument('-overlay', default=None, help='specify basemap for overlay')
     parser.add_argument('-shp', default=None, help='specify shapefile for overlay')
-    parser.add_argument('-alpha', type=float, default=0.4, \
+    parser.add_argument('-alpha', type=float, default=0.5, \
             help='Overlay transparency (0 is transparent, 1 opaque)')
     parser.add_argument('-link', action='store_true', help='share axes for all input images')
     parser.add_argument('-no_cbar', action='store_true', help='no colorbar')
     parser.add_argument('-ticks', action='store_true', help='display ticks')
     parser.add_argument('-scalebar',action='store_true', help='Show scalebar')
     parser.add_argument('-title', type=str, default=None, help='Specify title')
+    parser.add_argument('-invert', action='store_true', help='Multiply values by -1')
     parser.add_argument('filelist', nargs='+', help='input filenames (img1.tif img2.tif...)')
     return parser
 
@@ -410,6 +412,8 @@ def main():
                 """
             args['cbar_kwargs'] = pltlib.cbar_kwargs
             bma = get_bma(src_ds, 1, args['full'])   
+            if args['invert']:
+                bma *= -1
             #Note n+1 here ensures we're assigning subplot correctly here (n is 0-relative, subplot is 1)
             bma_fig(fig, bma, n_subplt=n_ax, subplt=n+1, ds=src_ds, **args)
         #3-band raster, likely disparity map
