@@ -447,7 +447,7 @@ def main():
     stack_fn = sys.argv[1]
 
     print("Loading stack")
-    s = malib.DEMStack(stack_fn=stack_fn, stats=True, trend=True, save=False)
+    s = malib.DEMStack(stack_fn=stack_fn, stats=True, med=True, trend=True, save=False)
     global d
     d = s.date_list_o
 
@@ -475,7 +475,8 @@ def main():
     m = s.ma_stack
     val = s.stack_mean
     count = s.stack_count
-    std = s.stack_std
+    std = s.stack_nmad
+    #std = s.stack_std
     trend = s.stack_trend
     detrended_std = s.stack_detrended_std
     stack_type = 'dem'
@@ -548,11 +549,12 @@ def main():
         #pad = 5
         #pad = 1
         pad = 3
-        ylabel = 'Elevation (m EGM2008)'
+        ylabel = 'Elevation (m WGS84)'
         ylabel_rel = 'Relative Elevation (m)'
         ylabel_resid = 'Detrended Elevation (m)'
         #plot4_label = 'Detrended std (m)'
-        plot4_label = 'Elevation std (m)'
+        #plot4_label = 'Elevation std (m)'
+        plot4_label = 'Elevation nmad (m)'
         s.mean_hillshade()
         hs = s.stack_mean_hs
         hs_clim = malib.calcperc(hs, (2,98))
