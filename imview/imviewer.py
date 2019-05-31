@@ -121,7 +121,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     #We don't use the kwargs, just there to save parsing in main
     
     if clim is None:
-        clim = pltlib.get_clim(bma)
+        clim = pltlib.get_clim(bma, clim_perc=clim_perc)
 
     print("Colorbar limits: %0.3f %0.3f" % (clim[0], clim[1]))
 
