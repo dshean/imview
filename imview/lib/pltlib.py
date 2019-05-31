@@ -174,7 +174,7 @@ def add_scalebar(ax, res, location='lower right', arr=None):
     sb = ScaleBar(res, location=location, border_pad=0.5)
     ax.add_artist(sb)
 
-def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwargs, fontsize=10):
+def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwargs, fontsize=10, format=None):
     """
     Add colorbar to axes for previously plotted mappable (output from imshow)
     
@@ -188,6 +188,8 @@ def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwa
     cax = divider.append_axes("right", size="5%", pad="2%")
     if arr is not None and clim is not None:
         cbar_kwargs['extend'] = get_cbar_extend(arr, clim=clim)
+    if format is not None:
+        cbar_kwargs['format'] = format
     cbar = fig.colorbar(mappable, cax=cax, **cbar_kwargs) 
     if label is not None:
         cbar.set_label(label, size=fontsize)
