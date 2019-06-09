@@ -494,8 +494,8 @@ def main():
             fig.set_size_inches(args['outsize'])
             #fig.set_size_inches(54.427, 71.87)
             #fig.set_size_inches(40, 87)
-            #fig.savefig(outf, dpi=args['dpi'], bbox_inches='tight', pad_inches=0, facecolor=fig.get_facecolor(), edgecolor='none')
-            fig.savefig(outf, dpi=args['dpi'], facecolor=fig.get_facecolor(), edgecolor='none')
+            fig.savefig(outf, dpi=args['dpi'], bbox_inches='tight', pad_inches=0, facecolor=fig.get_facecolor(), edgecolor='none')
+            #fig.savefig(outf, dpi=args['dpi'], facecolor=fig.get_facecolor(), edgecolor='none')
     #Show the plot - want to show all at once
     if not args['of']: 
         plt.show()
