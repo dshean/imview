@@ -142,9 +142,15 @@ def cmap_setndv(cmap1, cmap2=None):
         cmap.set_bad('k', alpha=1)
     return cmap
 
+#Turn off ticks and tick labels
 def hide_ticks(ax):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
+
+#Turn off tick labels
+def hide_tick_labels(ax):
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
 
 def hide_frame(ax):
     ax.spines['top'].set_visible(False)
