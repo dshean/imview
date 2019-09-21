@@ -188,7 +188,7 @@ def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwa
     """
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     #from mpl_toolkits.axes_grid1.colorbar import colorbar
-    fig = ax.figure
+    fig = ax.get_figure()
     divider = make_axes_locatable(ax)
     #cax = divider.append_axes("right", size="5%", pad=0.05)
     cax = divider.append_axes("right", size="5%", pad="2%")
@@ -397,3 +397,161 @@ def plot_2dhist(ax, x, y, xlim=None, ylim=None, xint=None, yint=None, nbins=(128
         y_slope, y_intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y)
         y_f = y_slope * xlim + y_intercept
         ax.plot(xlim, y_f, color='limegreen', ls='--', lw=0.5)
+
+from pyproj import Proj, transform
+from matplotlib.ticker import FormatStrFormatter
+
+def latlon_ticks(ax, lat_in=5, lon_in=5, in_proj={'init':'epsg:3857'}, fmt='%0.0f', grid=False):
+    """
+    plot geographic ticks/labels/grid on axes with projected coordinates
+    Inputs are ax object, latitude interval, longitude interval
+    """
+    
+    #ax.autoscale(enable=False)
+    
+    #Get input axes limits
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    
+    #Define input and output projections
+    in_proj = Proj(in_proj)
+    out_proj = Proj(init='epsg:4326')
+
+    #Get lat/lon coord for lower left and upper right mapped coords
+    ll = transform(in_proj, out_proj, xlim[0], ylim[0])
+    lr = transform(in_proj, out_proj, xlim[1], ylim[0])
+    ul = transform(in_proj, out_proj, xlim[0], ylim[1])
+    ur = transform(in_proj, out_proj, xlim[1], ylim[1])
+    
+    clat = np.mean([ll[1],lr[1],ul[1],ur[1]])
+    clon = np.mean([ll[0],lr[0],ul[0],ur[0]])
+    
+    bottom_clat = np.mean([ll[1],lr[1]])
+    top_clat = np.mean([ul[1],ur[1]])
+    top_clon = np.mean([ul[0],ur[0]])
+    left_clon = np.mean([ll[0],ul[0]])
+    right_clon = np.mean([lr[0],ur[0]])
+    
+    #Get number of expected lat or lon intervals
+    l_nx = np.floor((lr[0] - ll[0])/lon_in)
+    u_nx = np.floor((ur[0] - ul[0])/lon_in)
+    l_ny = np.floor((ul[1] - ll[1])/lat_in)
+    r_ny = np.floor((ur[1] - lr[1])/lat_in)
+    
+    #Determine rounded lower left
+    ll_r = np.zeros(2)
+    ll_r[0] = np.ceil(ll[0]/lon_in) * lon_in 
+    ll_r[1] = np.ceil(ll[1]/lat_in) * lat_in 
+    ul_r = np.zeros(2)
+    ul_r[0] = np.ceil(ul[0]/lon_in) * lon_in 
+    ul_r[1] = np.floor(ul[1]/lat_in) * lat_in 
+    lr_r = np.zeros(2)
+    lr_r[0] = np.floor(lr[0]/lon_in) * lon_in 
+    lr_r[1] = np.ceil(lr[1]/lat_in) * lat_in 
+    ur_r = np.zeros(2)
+    ur_r[0] = np.floor(ur[0]/lon_in) * lon_in 
+    ur_r[1] = np.floor(ur[1]/lat_in) * lat_in
+    
+    #Prepare lists of rounded coordinates at given intervals
+    bottom_list = np.arange(ll_r[0], lr_r[0]+lon_in, lon_in)
+    top_list = np.arange(ul_r[0], ur_r[0]+lon_in, lon_in)
+    left_list = np.arange(ll_r[1], ul_r[1]+lat_in, lat_in)
+    right_list = np.arange(lr_r[1], ur_r[1]+lat_in, lat_in)
+    
+    bottom_tick_loc_out = list(zip(bottom_list, np.repeat(bottom_clat, bottom_list.size)))
+    top_tick_loc_out = list(zip(top_list, np.repeat(top_clat, top_list.size)))
+    left_tick_loc_out = list(zip(np.repeat(left_clon, left_list.size), left_list))
+    right_tick_loc_out = list(zip(np.repeat(right_clon, right_list.size), right_list))
+    
+    #Determine tick locations (in input crs) for the desired lat/lon coords
+    bottom_tick_loc_init = np.array([transform(out_proj, in_proj, xy[0], xy[1])[0] for xy in bottom_tick_loc_out])
+    top_tick_loc_init = np.array([transform(out_proj, in_proj, xy[0], xy[1])[0] for xy in top_tick_loc_out])
+    left_tick_loc_init = np.array([transform(out_proj, in_proj, xy[0], xy[1])[1] for xy in left_tick_loc_out])
+    right_tick_loc_init = np.array([transform(out_proj, in_proj, xy[0], xy[1])[1] for xy in right_tick_loc_out])
+    
+    verbose = False
+    if verbose:
+        print(bottom_list)
+        print(bottom_tick_loc_out)
+        print(left_list)
+        print(left_tick_loc_out)
+    
+    #Set formatter
+    #ax.xaxis.set_major_formatter(FormatStrFormatter(fmt))
+    #ax.yaxis.set_major_formatter(FormatStrFormatter(fmt))
+    
+    #Prepare tick labels with desired format
+    if True:
+        #bottom_tick_labels = [fmt % x +'$^\circ$E' for x in bottom_list]
+        #top_tick_labels = [fmt % x +'$^\circ$E' for x in top_list]
+        #left_tick_labels = [fmt % y +'$^\circ$N' for y in left_list]
+        #right_tick_labels = [fmt % y +'$^\circ$N' for y in right_list]
+        bottom_tick_labels = [fmt % x for x in bottom_list]
+        top_tick_labels = [fmt % x for x in top_list]
+        left_tick_labels = [fmt % y for y in left_list]
+        right_tick_labels = [fmt % y for y in right_list]
+    else:
+        bottom_tick_labels = bottom_list
+        top_tick_labels = top_list
+        left_tick_labels = left_list
+        right_tick_labels = right_list
+    
+    #print(bottom_tick_labels)
+    
+    ax.set_xticks(bottom_tick_loc_init)
+    ax.set_xticklabels(bottom_tick_labels, minor=False)
+    ax.set_yticks(left_tick_loc_init)
+    ax.set_yticklabels(left_tick_labels, minor=False)
+    
+    #m = lambda x: x * (top_list[-1] - top_list[0])/(top_tick_loc_init[-1] - top_tick_loc_init[0])
+    #im = lambda x: x * (top_tick_loc_init[-1] - top_tick_loc_init[0])/(top_list[-1] - top_list[0])
+    im = lambda x: (-top_clon + x) * ((xlim[1] - xlim[0])/(ur[0] - ul[0]))
+    m = lambda x: top_clon + (x * ((ur[0] - ul[0])/(xlim[1] - xlim[0])))
+
+    top=True
+    right=False
+    
+    #This doesn't work, as it rescales data
+    if True:
+        #topax = ax.twiny()
+        topax = ax.secondary_xaxis('top', functions=(m,im))
+        #topax.set_aspect('equal')
+        #topax.set_xlim(ax.get_xlim())
+        #topax.set_ylim(ax.get_ylim())
+
+        #topax.set_xticks(top_tick_loc_init)
+        #print(topax.get_xticklabels())
+        #print(top_tick_labels)
+        #topax.set_xticklabels(top_tick_labels, minor=False)
+        #topax.xaxis.set_major_formatter(FormatStrFormatter(fmt))
+        #topax.xaxis.set_major_formatter(FormatStrFormatter(fmt +'$^\circ$E'))
+        #ax.set_xlim(*xlim)
+        #ax.set_ylim(*ylim)
+    
+    if False:
+        fig = ax.get_figure()
+        topax = fig.add_axes(ax.get_position())
+        topax.set_aspect('equal')
+        topax.patch.set_visible(False)
+        
+        topax.xaxis.tick_top()
+        topax.set_xticks(top_tick_loc_init)
+        topax.set_xticklabels(top_tick_labels, minor=False)
+        if right:
+            topax.yaxis.tick_right()
+            topax.set_yticks(right_tick_loc_init)
+            topax.set_yticklabels(right_tick_labels, minor=False)
+        else:
+            topax.yaxis.set_visible(False)
+        topax.set_xlim(ax.get_xlim())
+        topax.set_ylim(ax.get_ylim())
+        topax.set_title(ax.get_title())
+        ax.set_title(None)
+        
+    #ax.set_xlabel('Longitude')
+    #ax.set_ylabel('Latitude')
+    ax.set_xlabel('Longitude'+'$^\circ$E')
+    ax.set_ylabel('Latitude'+'$^\circ$N')
+
+    if grid:
+        ax.grid(ls=':')
