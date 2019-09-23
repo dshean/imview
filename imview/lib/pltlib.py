@@ -191,7 +191,8 @@ def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwa
     fig = ax.get_figure()
     divider = make_axes_locatable(ax)
     #cax = divider.append_axes("right", size="5%", pad=0.05)
-    cax = divider.append_axes("right", size="5%", pad="2%")
+    #cax = divider.append_axes("right", size="5%", pad="2%")
+    cax = divider.append_axes("right", size="2%", pad="1%")
     if arr is not None and clim is not None:
         cbar_kwargs['extend'] = get_cbar_extend(arr, clim=clim)
     if format is not None:
@@ -401,7 +402,7 @@ def plot_2dhist(ax, x, y, xlim=None, ylim=None, xint=None, yint=None, nbins=(128
 from pyproj import Proj, transform
 from matplotlib.ticker import FormatStrFormatter
 
-def latlon_ticks(ax, lat_in=5, lon_in=5, in_proj={'init':'epsg:3857'}, fmt='%0.0f', grid=False):
+def latlon_ticks(ax, lat_in=5, lon_in=5, in_crs={'init':'epsg:3857'}, fmt='%0.0f', grid=False):
     """
     plot geographic ticks/labels/grid on axes with projected coordinates
     Inputs are ax object, latitude interval, longitude interval
@@ -414,7 +415,8 @@ def latlon_ticks(ax, lat_in=5, lon_in=5, in_proj={'init':'epsg:3857'}, fmt='%0.0
     ylim = ax.get_ylim()
     
     #Define input and output projections
-    in_proj = Proj(in_proj)
+    #Assume in_proj is CRS dictionary
+    in_proj = Proj(in_crs)
     out_proj = Proj(init='epsg:4326')
 
     #Get lat/lon coord for lower left and upper right mapped coords
@@ -427,6 +429,7 @@ def latlon_ticks(ax, lat_in=5, lon_in=5, in_proj={'init':'epsg:3857'}, fmt='%0.0
     clon = np.mean([ll[0],lr[0],ul[0],ur[0]])
     
     bottom_clat = np.mean([ll[1],lr[1]])
+    bottom_clon = np.mean([ll[0],lr[0]])
     top_clat = np.mean([ul[1],ur[1]])
     top_clon = np.mean([ul[0],ur[0]])
     left_clon = np.mean([ll[0],ul[0]])
@@ -505,8 +508,12 @@ def latlon_ticks(ax, lat_in=5, lon_in=5, in_proj={'init':'epsg:3857'}, fmt='%0.0
     
     #m = lambda x: x * (top_list[-1] - top_list[0])/(top_tick_loc_init[-1] - top_tick_loc_init[0])
     #im = lambda x: x * (top_tick_loc_init[-1] - top_tick_loc_init[0])/(top_list[-1] - top_list[0])
-    im = lambda x: (-top_clon + x) * ((xlim[1] - xlim[0])/(ur[0] - ul[0]))
-    m = lambda x: top_clon + (x * ((ur[0] - ul[0])/(xlim[1] - xlim[0])))
+   
+    #ref_clon = bottom_clon
+    #ref_clon = top_clon
+    ref_clon = in_crs['lon_0']
+    im = lambda lon: (-ref_clon + lon) * ((xlim[1] - xlim[0])/(ur[0] - ul[0]))
+    m = lambda x: ref_clon + (x * ((ur[0] - ul[0])/(xlim[1] - xlim[0])))
 
     top=True
     right=False
