@@ -180,6 +180,13 @@ def add_scalebar(ax, res, location='lower right', arr=None):
     sb = ScaleBar(res, location=location, border_pad=0.5)
     ax.add_artist(sb)
 
+#Create a mappable object with specified limits for a colorbar
+def cbar_mappable(clim, cmap='inferno'):
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=clim[0], vmax=clim[1]))
+    # fake up the array of the scalar mappable. Urgh...
+    sm._A = []
+    return sm
+
 def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwargs, fontsize=10, format=None):
     """
     Add colorbar to axes for previously plotted mappable (output from imshow)
