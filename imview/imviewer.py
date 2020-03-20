@@ -279,7 +279,7 @@ def get_bma(src_ds, bn, full):
 
 def getparser():
     #Generate list of valid mpl colormaps
-    maps=[m for m in plt.cm.datad]
+    maps=[m for m in plt.colormaps()]
     #maps=[m for m in plt.cm.datad if not m.endswith("_r")]
     maps.sort()
 
