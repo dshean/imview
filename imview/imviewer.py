@@ -313,7 +313,7 @@ def getparser():
     parser.add_argument('-no_cbar', action='store_true', help='no colorbar')
     parser.add_argument('-ticks', action='store_true', help='display ticks')
     parser.add_argument('-scalebar',action='store_true', help='Show scalebar')
-    parser.add_argument('-title', type=str, default=None, help='Specify title')
+    parser.add_argument('-title', type=str, default=None, choices=['ts','fn'], help='Specify title, ts=timestamp, fn=filename"')
     parser.add_argument('-invert', action='store_true', help='Multiply values by -1')
     parser.add_argument('filelist', nargs='+', help='input filenames (img1.tif img2.tif...)')
     return parser
@@ -334,6 +334,10 @@ def main():
     extent = 'first'
     #extent = 'union'
 
+    #Should accept 'ts' or 'fn' or string here, default is 'ts'
+    #Can also accept list for subplots
+    title = args['title']
+
     if args['link']:
         fig = plt.figure(0)
         n_ax = len(args['filelist'])
@@ -346,12 +350,30 @@ def main():
         extent = geolib.ds_geom_union_extent(src_ds_list, t_srs=t_srs)
         #extent = geolib.ds_geom_intersection_extent(src_ds_list, t_srs=t_srs)
         #print(res, extent)
-
+        
     for n,fn in enumerate(args['filelist']):
         if not iolib.fn_check(fn):
             print('Unable to open input file: %s' % fn)
             continue
 
+        if title == 'ts':
+            ts = timelib.fn_getdatetime_list(fn) 
+
+            if ts:
+                print("Timestamp list: ", ts)
+                if len(ts) == 1:
+                    args['title'] = ts[0].date()
+                elif len(ts) > 1:
+                    args['title'] = "%s to %s" % (ts[0].date(), ts[1].date())
+            else:
+                print("Unable to extract timestamp")
+                args['title'] = None
+        elif title == 'fn':
+            args['title'] = fn
+        
+        #if title is not None:
+        #    plt.title(title, fontdict={'fontsize':12})
+            
         #Note: this won't work if img1 has 1 band and img2 has 3 bands
         #Hack for now
         if not args['link']:
@@ -442,22 +464,6 @@ def main():
         #    bma = get_bma(src_ds, 1, args['full'])
         #    bma_fig(fig, bma, **args)
 
-        ts = timelib.fn_getdatetime_list(fn) 
-
-        if ts:
-            print("Timestamp list: ", ts)
-
-        
-        title = args['title']
-        if title is None:
-            if len(ts) == 1:
-                title = ts[0].date()
-            elif len(ts) > 1:
-                title = "%s to %s" % (ts[0].date(), ts[1].date())
-        
-        if title is not None:
-            plt.title(title, fontdict={'fontsize':12})
-            
         plt.tight_layout()
         
         #Write out the file 
