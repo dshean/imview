@@ -8,6 +8,7 @@
 
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 import numpy as np
 
@@ -31,6 +32,24 @@ imshow_kwargs = {'interpolation':'none'}
 #cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}
 #cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}
 cbar_kwargs={'orientation':'vertical'}
+
+# set the colormap and centre the colorbar
+# From Joe Kington: http://chris35wills.github.io/matplotlib_diverging_colorbar/
+class MidpointNormalize(colors.Normalize):
+    """
+    Normalise the colorbar so that diverging bars work there way either side from a prescribed midpoint value)
+
+    e.g. im=ax1.imshow(array, norm=MidpointNormalize(midpoint=0.,vmin=-100, vmax=100))
+    """
+    def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
+        self.midpoint = midpoint
+        colors.Normalize.__init__(self, vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        # I'm ignoring masked values and all kinds of edge cases to make a
+        # simple example...
+        x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
+        return np.ma.masked_array(np.interp(value, x, y), np.isnan(value))
 
 def iv_fn(fn, full=False, return_ma=False, **kwargs):
     ds = iolib.fn_getds(fn)
@@ -390,7 +409,6 @@ def plot_2dhist(ax, x, y, xlim=None, ylim=None, xint=None, yint=None, nbins=(128
     #Hmasked = H
     H_clim = malib.calcperc(Hmasked, (2,98))
     if log:
-        import matplotlib.colors as colors
         ax.pcolormesh(xedges,yedges,Hmasked,cmap='inferno',norm=colors.LogNorm(vmin=H_clim[0],vmax=H_clim[1]))
     else:
         ax.pcolormesh(xedges,yedges,Hmasked,cmap='inferno',vmin=H_clim[0],vmax=H_clim[1])
