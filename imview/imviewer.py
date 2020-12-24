@@ -190,8 +190,7 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
     #depreciated in 2.2
     #ax.set_adjustable('box-forced')
 
-    cbar = True 
-    if cbar:
+    if cbar_kwargs:
         #Should set the format based on dtype of input data 
         #cbar_kwargs['format'] = '%i'
         #cbar_kwargs['format'] = '%0.1f'
@@ -376,6 +375,10 @@ def main():
             if args['link']:
                 src_ds = warplib.memwarp_multi([src_ds,], res=res, extent=extent, t_srs=t_srs)[0]
 
+        args['cbar_kwargs'] = pltlib.cbar_kwargs
+        if args['no_cbar']: 
+            args['cbar_kwargs'] = None 
+
         nbands = src_ds.RasterCount
         b = src_ds.GetRasterBand(1)
         dt = gdal.GetDataTypeName(b.DataType)
@@ -410,7 +413,6 @@ def main():
                     cbar_kwargs['extend'] = 'neither'
                     args['cmap'] = 'gray'
                 """
-            args['cbar_kwargs'] = pltlib.cbar_kwargs
             bma = get_bma(src_ds, 1, args['full'])   
             if args['invert']:
                 bma *= -1
