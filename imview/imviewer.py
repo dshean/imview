@@ -313,7 +313,7 @@ def getparser():
     parser.add_argument('-no_cbar', action='store_true', help='no colorbar')
     parser.add_argument('-ticks', action='store_true', help='display ticks')
     parser.add_argument('-scalebar',action='store_true', help='Show scalebar')
-    parser.add_argument('-title', type=str, default=None, choices=['ts','fn'], help='Specify title, ts=timestamp, fn=filename"')
+    parser.add_argument('-title', type=str, default=None, help='Specify title, ts=timestamp, fn=filename, or user-specified string"')
     parser.add_argument('-invert', action='store_true', help='Multiply values by -1')
     parser.add_argument('filelist', nargs='+', help='input filenames (img1.tif img2.tif...)')
     return parser
@@ -371,9 +371,6 @@ def main():
         elif title == 'fn':
             args['title'] = fn
         
-        #if title is not None:
-        #    plt.title(title, fontdict={'fontsize':12})
-            
         #Note: this won't work if img1 has 1 band and img2 has 3 bands
         #Hack for now
         if not args['link']:
