@@ -4,14 +4,11 @@
 #dshean@gmail.com
 
 #Image viewer built on matplotlib
-#Needs to be cleaned up, but should work out of the box
 
 #Todo
-#Scalebar adjustment when loading subsampled input bma
-#access from malib
 #Clean up overlay handling
 #pyproj or geolib to go from projected coord to lat/lon
-#Incorporate basemap support to print lat/lon, add scalebar, etc
+#Incorporate cartopy support to print lat/lon tick labels
 #Put bma into ndarray, use figure number with format_coord - display all values for multiband image
 
 import os
@@ -28,6 +25,7 @@ from pygeotools.lib import iolib, malib, geolib, timelib, warplib
 from imview.lib import pltlib
 
 #Global variable holding array under cursor
+#Note: A lot of this functionality is now possible with matplotlib widget or more modern packages
 gbma = None
 
 #This adds the z-value to cursor coordinate info
@@ -347,6 +345,8 @@ def main():
         res_stats = geolib.get_res_stats(src_ds_list, t_srs=t_srs)
         #Use min res
         res = res_stats[0]
+        #Use max res
+        #res = res_stats[1]
         extent = 'intersection'
         extent = geolib.ds_geom_union_extent(src_ds_list, t_srs=t_srs)
         #extent = geolib.ds_geom_intersection_extent(src_ds_list, t_srs=t_srs)
