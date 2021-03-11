@@ -117,7 +117,7 @@ def ndanimate(a):
     plt.show()
     return an
 
-def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, bg_perc=(2,98), n_subplt=1, subplt=1, label=None, title=None, contour_int=None, contour_fn=None, alpha=0.5, ticks=False, scalebar=None, ds=None, shp=None, imshow_kwargs={'interpolation':'nearest'}, cbar_kwargs={'orientation':'vertical'}, **kwargs):
+def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, bg_perc=(2,98), n_subplt=1, subplt=1, label=None, title=None, contour_int=None, contour_fn=None, alpha=0.5, ticks=False, scalebar=None, ds=None, shp=None, imshow_kwargs={'interpolation':'none'}, cbar_kwargs={'orientation':'vertical'}, **kwargs):
     #We don't use the kwargs, just there to save parsing in main
     
     if clim is None:
@@ -183,7 +183,8 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
             scale_ticks(ax, ds)
         else:
             pltlib.hide_ticks(ax)
-        xres = geolib.get_res(ds)[0]
+        #xres = geolib.get_res(ds)[0]
+        xres = gt[1]
     else:
         pltlib.hide_ticks(ax)
     #This forces the black line outlining the image subplot to snap to the actual image dimensions
