@@ -4,11 +4,12 @@
 #dshean@gmail.com
 
 #Library of common matplotlib functions
-#Should migrate much of imview functionality here, update to work with ax
+#Should migrate much of imviewer functionality here, update to pass/accept and work with axes objects
 
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from matplotlib.ticker import FormatStrFormatter
 
 import numpy as np
 
@@ -31,7 +32,7 @@ imshow_kwargs = {'interpolation':'none'}
 #Global cbar keyword arguments
 #cbar_kwargs={'extend':'both', 'orientation':'vertical', 'fraction':0.046, 'pad':0.04}
 #cbar_kwargs={'extend':'both', 'orientation':'vertical', 'shrink':0.7, 'fraction':0.12, 'pad':0.02}
-cbar_kwargs={'orientation':'vertical'}
+cbar_kwargs = {'orientation':'vertical'}
 
 # set the colormap and centre the colorbar
 # From Joe Kington: http://chris35wills.github.io/matplotlib_diverging_colorbar/
@@ -282,6 +283,7 @@ def fmt_date_ax(ax, minor=3):
     #ax.fill_between(x, 0, 1, facecolor='gray', alpha=0.5, transform=trans)
     ax.xaxis.grid(True, 'major')
 
+#Below should be rewritten using geopandas
 #This overlays a shapefile
 #Should probably isolate to geometry
 #Currently needs the ds associated with the imshow ax
@@ -424,15 +426,14 @@ def plot_2dhist(ax, x, y, xlim=None, ylim=None, xint=None, yint=None, nbins=(128
         y_f = y_slope * xlim + y_intercept
         ax.plot(xlim, y_f, color='limegreen', ls='--', lw=0.5)
 
-from pyproj import Proj, transform
-from matplotlib.ticker import FormatStrFormatter
-
+#This could likely be replaced/outsourced to cartopy
 def latlon_ticks(ax, lat_in=5, lon_in=5, in_crs={'init':'epsg:3857'}, fmt='%0.0f', grid=False):
     """
     plot geographic ticks/labels/grid on axes with projected coordinates
     Inputs are ax object, latitude interval, longitude interval
     """
     
+    from pyproj import Proj, transform
     #ax.autoscale(enable=False)
     
     #Get input axes limits
