@@ -89,7 +89,7 @@ def iv(a, ax=None, clim=None, clim_perc=(2,98), cmap='cpt_rainbow', label=None, 
             bg_clim_perc = (2,98)
             bg_clim = get_clim(hs, bg_clim_perc)
             #bg_clim = (1, 255)
-            bgplot = ax.imshow(hs, cmap=b_cm, clim=bg_clim)
+            bgplot = ax.imshow(hs, cmap=b_cm, clim=bg_clim, **imshow_kwargs)
             alpha = 0.5
     if scalebar:
         if ds is not None:
