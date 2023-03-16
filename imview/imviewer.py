@@ -380,7 +380,7 @@ def main():
         
         #fig.set_facecolor('black')
         fig.set_facecolor('white')
-        fig.canvas.set_window_title(os.path.split(fn)[1])
+        fig.canvas.manager.set_window_title(os.path.split(fn)[1])
         #fig.suptitle(os.path.split(fn)[1], fontsize=10)
 
         if args['overlay']:
