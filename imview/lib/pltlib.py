@@ -218,8 +218,9 @@ def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwa
     fig = ax.get_figure()
     divider = make_axes_locatable(ax)
     #cax = divider.append_axes("right", size="5%", pad=0.05)
-    #cax = divider.append_axes("right", size="5%", pad="2%")
-    cax = divider.append_axes("right", size="2%", pad="1%")
+    #cax = divider.append_axes("right", size="10%", pad="4%")
+    cax = divider.append_axes("right", size="5%", pad="2%")
+    #cax = divider.append_axes("right", size="2%", pad="1%")
     if arr is not None and clim is not None:
         cbar_kwargs['extend'] = get_cbar_extend(arr, clim=clim)
     if format is not None:

@@ -154,8 +154,8 @@ def bma_fig(fig, bma, cmap='cpt_rainbow', clim=None, clim_perc=(2,98), bg=None, 
         #alpha = 0.6
         bg_perc = (4,96)
         bg_alpha = 1.0
-        #bg_clim = malib.calcperc(bg, bg_perc)
-        bg_clim = (1, 255)
+        bg_clim = malib.calcperc(bg, bg_perc)
+        #bg_clim = (1, 255)
         bg_cmap_name = 'gray'
         bg_cmap = pltlib.cmap_setndv(bg_cmap_name, cmap_name)
         #bg_cmap = plt.get_cmap(bg_cmap_name)
@@ -410,6 +410,8 @@ def main():
                 #Special case to handle ASP float32 grayscale data
                 if '-L_sub' in fn or '-R_sub' in fn:
                     args['cmap'] = 'gray'
+                elif '-D_sub' in fn:
+                    args['cmap'] = 'cpt_rainbow'
                 else:
                     if (dt == 'Float64') or (dt == 'Float32') or (dt == 'Int32'):
                         args['cmap'] = 'cpt_rainbow'
