@@ -197,6 +197,8 @@ def add_scalebar(ax, res, location='lower right', arr=None):
     from matplotlib_scalebar.scalebar import ScaleBar
     if arr is not None:
         location=best_scalebar_location(arr)
+    #Example for lidar data in state plane coordinate system, units of feet 
+    #sb = ScaleBar(res, units='ft', dimension='imperial-length', fixed_value=1000, location='lower right', border_pad=0.5)
     sb = ScaleBar(res, location=location, border_pad=0.5)
     ax.add_artist(sb)
 
