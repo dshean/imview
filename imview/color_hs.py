@@ -18,17 +18,17 @@ import subprocess
 import shutil
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from osgeo import gdal
 
-from pygeotools.lib import iolib
-from pygeotools.lib import malib
+from pygeotools.lib import iolib, malib
 
 from imview.lib import gmtColormap
 cpt_rainbow = gmtColormap.get_rainbow()
-plt.register_cmap(cmap=cpt_rainbow)
+matplotlib.colormaps.register(cmap=cpt_rainbow)
 cpt_rainbow_r = gmtColormap.get_rainbow(rev=True)
-plt.register_cmap(cmap=cpt_rainbow_r)
+matplotlib.colormaps.register(cmap=cpt_rainbow_r)
 
 def make_kmz(fn):
     print("Generating kmz")

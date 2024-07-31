@@ -8,15 +8,15 @@ import os
 import argparse
 
 from osgeo import gdal
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-from pygeotools.lib import iolib
-from pygeotools.lib import malib
+from pygeotools.lib import iolib, malib
 
 from imview.lib import gmtColormap
 cpt_rainbow = gmtColormap.get_rainbow()
-plt.register_cmap(cmap=cpt_rainbow)
+matplotlib.colormaps.register(cmap=cpt_rainbow)
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.

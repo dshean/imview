@@ -17,9 +17,9 @@ from pygeotools.lib import malib, geolib, iolib
 
 from imview.lib import gmtColormap
 cpt_rainbow = gmtColormap.get_rainbow()
-plt.register_cmap(cmap=cpt_rainbow)
+matplotlib.colormaps.register(cmap=cpt_rainbow)
 cpt_rainbow_r = gmtColormap.get_rainbow(rev=True) 
-plt.register_cmap(cmap=cpt_rainbow_r)
+matplotlib.colormaps.register(cmap=cpt_rainbow_r)
 
 #import itertools
 #color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -234,7 +234,7 @@ def add_cbar(ax, mappable, label=None, arr=None, clim=None, cbar_kwargs=cbar_kwa
     #Set colorbar to be opaque, even if image is transparent
     cbar.set_alpha(1)
     #Need this to update after alpha change
-    cbar.draw_all()
+    cbar._draw_all()
     return cbar
 
 """
